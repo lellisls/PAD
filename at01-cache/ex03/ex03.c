@@ -29,22 +29,41 @@ void multiplyBlock( double **a, double **b, double **c, int n ) {
   }
 }
 
-void add( double **a, double **b, double **c, int n ) {
+double** add( double **a, double **b, int n ) {
+  double **c;
   int i, j;
+  c = ( double** ) malloc( n * sizeof( double* ) );
+  for( i = 0; i < n; i++ ) {
+    c[ i ] = ( double* ) malloc( n * sizeof( double ) );
+  }
   for( i = 0; i < n; ++i ) {
     for( j = 0; j < n; ++j ) {
       c[ i ][ j ] = a[ i ][ j ] + b[ i ][ j ];
     }
   }
+  return( c );
 }
 
-void sub( double **a, double **b, double **c, int n ) {
+double** sub( double **a, double **b, int n ) {
+  double **c;
   int i, j;
+  c = ( double** ) malloc( n * sizeof( double* ) );
+  for( i = 0; i < n; i++ ) {
+    c[ i ] = ( double* ) malloc( n * sizeof( double ) );
+  }
   for( i = 0; i < n; ++i ) {
     for( j = 0; j < n; ++j ) {
       c[ i ][ j ] = a[ i ][ j ] - b[ i ][ j ];
     }
   }
+  return( c );
+}
+
+void freeMatrix( double **mat, int n ) {
+  for( int i = 0; i < n; i++ ) {
+    free( mat[ i ] );
+  }
+  free( mat );
 }
 
 
@@ -66,7 +85,6 @@ void strassenRec( double **a, double **b, double **c, int n ) {
   int i, j;
   double **a11, **a12, **a21, **a22;
   double **b11, **b12, **b21, **b22;
-  double **c11, **c12, **c21, **c22;
   a11 = ( double** ) malloc( m * sizeof( double* ) );
   a12 = ( double** ) malloc( m * sizeof( double* ) );
   a21 = ( double** ) malloc( m * sizeof( double* ) );
@@ -75,10 +93,6 @@ void strassenRec( double **a, double **b, double **c, int n ) {
   b12 = ( double** ) malloc( m * sizeof( double* ) );
   b21 = ( double** ) malloc( m * sizeof( double* ) );
   b22 = ( double** ) malloc( m * sizeof( double* ) );
-  c11 = ( double** ) malloc( m * sizeof( double* ) );
-  c12 = ( double** ) malloc( m * sizeof( double* ) );
-  c21 = ( double** ) malloc( m * sizeof( double* ) );
-  c22 = ( double** ) malloc( m * sizeof( double* ) );
   for( i = 0; i < m; i++ ) {
     a11[ i ] = ( double* ) malloc( m * sizeof( double ) );
     a12[ i ] = ( double* ) malloc( m * sizeof( double ) );
@@ -88,10 +102,6 @@ void strassenRec( double **a, double **b, double **c, int n ) {
     b12[ i ] = ( double* ) malloc( m * sizeof( double ) );
     b21[ i ] = ( double* ) malloc( m * sizeof( double ) );
     b22[ i ] = ( double* ) malloc( m * sizeof( double ) );
-    c11[ i ] = ( double* ) malloc( m * sizeof( double ) );
-    c12[ i ] = ( double* ) malloc( m * sizeof( double ) );
-    c21[ i ] = ( double* ) malloc( m * sizeof( double ) );
-    c22[ i ] = ( double* ) malloc( m * sizeof( double ) );
     for( j = 0; j < m; j++ ) {
       a11[ i ][ j ] = a[ i ][ j ];
       a12[ i ][ j ] = a[ i ][ j + m ];
