@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #ifndef MATLEN
-#define MATLEN 1024
+#define MATLEN 128
 #endif
 
 #ifndef BLOCK
@@ -29,6 +29,7 @@ double** multiplyBlock( double **a, double **b, int n ) {
       }
     }
   }
+  return( c );
 }
 
 double** add( double **a, double **b, int n ) {
@@ -85,7 +86,7 @@ void freeMatrix( double **mat, int n ) {
 }
 
 
-double** strassenRec( double **a, double **b, int n ) {
+double** strassen( double **a, double **b, int n ) {
   /*
    * Se a submatriz chegar à um tamanho definido pelo usuário
    * será realizada uma multiplicação convencional.
@@ -135,35 +136,35 @@ double** strassenRec( double **a, double **b, int n ) {
    * temporarias t1->t10*/
   double **t1 = add( a11, a22, m );
   double **t6 = add( b11, b22, m );
-  double **q1 = strassenRec( t1, t6, m );
+  double **q1 = strassen( t1, t6, m );
   freeMatrix( t1, m );
   freeMatrix( t6, m );
 
   double **t2 = add( a21, a22, m );
-  double **q2 = strassenRec( t2, b11, m );
+  double **q2 = strassen( t2, b11, m );
   freeMatrix( t2, m );
 
   double **t7 = sub( b12, b22, m );
-  double **q3 = strassenRec( a11, t7, m );
+  double **q3 = strassen( a11, t7, m );
   freeMatrix( t7, m );
 
   double **t8 = sub( b21, b11, m );
-  double **q4 = strassenRec( a22, t8, m );
+  double **q4 = strassen( a22, t8, m );
   freeMatrix( t8, m );
 
   double **t3 = add( a11, a12, m );
-  double **q5 = strassenRec( t3, b22, m );
+  double **q5 = strassen( t3, b22, m );
   freeMatrix( t3, m );
 
   double **t4 = sub( a21, a11, m );
   double **t9 = add( b11, b12, m );
-  double **q6 = strassenRec( t4, t9, m );
+  double **q6 = strassen( t4, t9, m );
   freeMatrix( t4, m );
   freeMatrix( t9, m );
 
   double **t5 = sub( a12, a22, m );
   double **t10 = add( b21, b22, m );
-  double **q7 = strassenRec( t5, t10, m );
+  double **q7 = strassen( t5, t10, m );
   freeMatrix( t5, m );
   freeMatrix( t10, m );
 
@@ -200,15 +201,11 @@ double** strassenRec( double **a, double **b, int n ) {
       c[ i + m ][ j + m ] = c22[ i ][ j ];
     }
   }
-  freeMatrix(c11, m);
-  freeMatrix(c12, m);
-  freeMatrix(c21, m);
-  freeMatrix(c22, m);
-  return c;
-}
-
-void strassen( double **a, double **b, double **c, int n ) {
-
+  freeMatrix( c11, m );
+  freeMatrix( c12, m );
+  freeMatrix( c21, m );
+  freeMatrix( c22, m );
+  return( c );
 }
 
 int main( ) {
@@ -225,11 +222,9 @@ int main( ) {
 
   a = ( double** ) malloc( MATLEN * sizeof( double* ) );
   b = ( double** ) malloc( MATLEN * sizeof( double* ) );
-  c = ( double** ) malloc( MATLEN * sizeof( double* ) );
   for( i = 0; i < MATLEN; i++ ) {
     a[ i ] = ( double* ) malloc( MATLEN * sizeof( double ) );
     b[ i ] = ( double* ) malloc( MATLEN * sizeof( double ) );
-    c[ i ] = ( double* ) malloc( MATLEN * sizeof( double ) );
   }
   /*
    * CONFIGURAÇÃO DO PAPI
@@ -266,7 +261,7 @@ int main( ) {
   }
   s = PAPI_get_real_usec( );
   /* FUNÇÃO A SER AVALIADA */
-  strassen( a, b);
+  c = strassen( a, b, MATLEN );
   /* FIM DA FUNÇÃO A SER AVALIADA */
   e = PAPI_get_real_usec( );
   if( ( retval = PAPI_read( EventSet, &values[ 0 ] ) ) != PAPI_OK ) {
@@ -299,8 +294,8 @@ int main( ) {
     );
   /*       MAT BLk Time  DCM   MFLOPS CPI */
   printf( "%d, %d, %lld, %lld, %.2f, %.2f\n", MATLEN, BLOCK, e - s, values[ 0 ], mflops, cpi );
-  freeMatrix(a, MATLEN);
-  freeMatrix(b, MATLEN);
-  freeMatrix(c, MATLEN);
+  freeMatrix( a, MATLEN );
+  freeMatrix( b, MATLEN );
+  freeMatrix( c, MATLEN );
   return( 0 );
 }
