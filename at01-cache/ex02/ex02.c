@@ -17,6 +17,13 @@
 
 #include "papi.h"
 
+void freeMatrix( double **mat ) {
+  for( int i = 0; i < MATLEN; i++ ) {
+    free( mat[ i ] );
+  }
+  free( mat );
+}
+
 int main( ) {
   int EventSet = PAPI_NULL;
   long long values[ 4 ], s, e;
@@ -118,5 +125,8 @@ int main( ) {
     );
   /*       MAT BLk Time  DCM   MFLOPS CPI */
   printf( "%d, %d, %lld, %lld, %.2f, %.2f\n", MATLEN, BLOCK, e - s, values[ 0 ], mflops, cpi );
+  freeMatrix(a);
+  freeMatrix(b);
+  freeMatrix(c);
   return( 0 );
 }

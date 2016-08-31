@@ -18,9 +18,11 @@
 #include "papi.h"
 
 
-void multiplyBlock( double **a, double **b, double **c, int n ) {
+double** multiplyBlock( double **a, double **b, int n ) {
   int i, j, k;
+  double **c = ( double** ) malloc( n * sizeof( double* ) );
   for( i = 0; i < n; ++i ) {
+    c[ i ] = ( double* ) malloc( n * sizeof( double ) );
     for( k = 0; k < n; ++k ) {
       for( j = 0; j < n; ++j ) {
         c[ i ][ j ] = c[ i ][ j ] + a[ i ][ k ] * b[ k ][ j ];
@@ -30,9 +32,8 @@ void multiplyBlock( double **a, double **b, double **c, int n ) {
 }
 
 double** add( double **a, double **b, int n ) {
-  double **c;
   int i, j;
-  c = ( double** ) malloc( n * sizeof( double* ) );
+  double **c = ( double** ) malloc( n * sizeof( double* ) );
   for( i = 0; i < n; i++ ) {
     c[ i ] = ( double* ) malloc( n * sizeof( double ) );
   }
@@ -45,9 +46,8 @@ double** add( double **a, double **b, int n ) {
 }
 
 double** sub( double **a, double **b, int n ) {
-  double **c;
   int i, j;
-  c = ( double** ) malloc( n * sizeof( double* ) );
+  double **c = ( double** ) malloc( n * sizeof( double* ) );
   for( i = 0; i < n; i++ ) {
     c[ i ] = ( double* ) malloc( n * sizeof( double ) );
   }
@@ -59,6 +59,24 @@ double** sub( double **a, double **b, int n ) {
   return( c );
 }
 
+void add2( double **a, double **b, int n ) {
+  int i, j;
+  for( i = 0; i < n; ++i ) {
+    for( j = 0; j < n; ++j ) {
+      a[ i ][ j ] += b[ i ][ j ];
+    }
+  }
+}
+
+void sub2( double **a, double **b, int n ) {
+  int i, j;
+  for( i = 0; i < n; ++i ) {
+    for( j = 0; j < n; ++j ) {
+      a[ i ][ j ] -= b[ i ][ j ];
+    }
+  }
+}
+
 void freeMatrix( double **mat, int n ) {
   for( int i = 0; i < n; i++ ) {
     free( mat[ i ] );
@@ -67,14 +85,13 @@ void freeMatrix( double **mat, int n ) {
 }
 
 
-void strassenRec( double **a, double **b, double **c, int n ) {
+double** strassenRec( double **a, double **b, int n ) {
   /*
    * Se a submatriz chegar à um tamanho definido pelo usuário
    * será realizada uma multiplicação convencional.
    */
   if( n <= BLOCK ) {
-    multiplyBlock( a, b, c, n );
-    return;
+    return( multiplyBlock( a, b, n ) );
   }
   /*
    * Caso contrário, será feita a multiplicação de 4 submatrizes
@@ -114,6 +131,80 @@ void strassenRec( double **a, double **b, double **c, int n ) {
       b22[ i ][ j ] = b[ i + m ][ j + m ];
     }
   }
+  /* Calculando produtos temporários q1->q7, já liberando as somas
+   * temporarias t1->t10*/
+  double **t1 = add( a11, a22, m );
+  double **t6 = add( b11, b22, m );
+  double **q1 = strassenRec( t1, t6, m );
+  freeMatrix( t1, m );
+  freeMatrix( t6, m );
+
+  double **t2 = add( a21, a22, m );
+  double **q2 = strassenRec( t2, b11, m );
+  freeMatrix( t2, m );
+
+  double **t7 = sub( b12, b22, m );
+  double **q3 = strassenRec( a11, t7, m );
+  freeMatrix( t7, m );
+
+  double **t8 = sub( b21, b11, m );
+  double **q4 = strassenRec( a22, t8, m );
+  freeMatrix( t8, m );
+
+  double **t3 = add( a11, a12, m );
+  double **q5 = strassenRec( t3, b22, m );
+  freeMatrix( t3, m );
+
+  double **t4 = sub( a21, a11, m );
+  double **t9 = add( b11, b12, m );
+  double **q6 = strassenRec( t4, t9, m );
+  freeMatrix( t4, m );
+  freeMatrix( t9, m );
+
+  double **t5 = sub( a12, a22, m );
+  double **t10 = add( b21, b22, m );
+  double **q7 = strassenRec( t5, t10, m );
+  freeMatrix( t5, m );
+  freeMatrix( t10, m );
+
+  /* Calculando c11 c12 c21 e c22 */
+  double **c11 = add( q1, q4, m ); /* c11 = q1 + q4 */
+  sub2( c11, q5, m ); /* c11 = c11 - q5; */
+  add2( c11, q7, m ); /* c11 = c11 + q7; */
+
+  double **c12 = add( q3, q5, m ); /* c12 = q3 + q5 */
+
+  double **c21 = add( q2, q4, m ); /* c21 = q2 + q4 */
+
+  double **c22 = sub( q1, q2, m ); /* c22 = q1 - q2 */
+  add2( c22, q3, m ); /* c22 = c22 + q3; */
+  add2( c22, q6, m ); /* c22 = c22 + q6; */
+
+  freeMatrix( q1, m );
+  freeMatrix( q2, m );
+  freeMatrix( q3, m );
+  freeMatrix( q4, m );
+  freeMatrix( q5, m );
+  freeMatrix( q6, m );
+  freeMatrix( q7, m );
+
+  double **c = ( double** ) malloc( n * sizeof( double* ) );
+  for( i = 0; i < n; i++ ) {
+    c[ i ] = ( double* ) malloc( n * sizeof( double ) );
+  }
+  for( i = 0; i < m; i++ ) {
+    for( j = 0; j < m; j++ ) {
+      c[ i ][ j ] = c11[ i ][ j ];
+      c[ i ][ j + m ] = c12[ i ][ j ];
+      c[ i + m ][ j ] = c21[ i ][ j ];
+      c[ i + m ][ j + m ] = c22[ i ][ j ];
+    }
+  }
+  freeMatrix(c11, m);
+  freeMatrix(c12, m);
+  freeMatrix(c21, m);
+  freeMatrix(c22, m);
+  return c;
 }
 
 void strassen( double **a, double **b, double **c, int n ) {
@@ -175,7 +266,7 @@ int main( ) {
   }
   s = PAPI_get_real_usec( );
   /* FUNÇÃO A SER AVALIADA */
-  strassen( a, b, c );
+  strassen( a, b);
   /* FIM DA FUNÇÃO A SER AVALIADA */
   e = PAPI_get_real_usec( );
   if( ( retval = PAPI_read( EventSet, &values[ 0 ] ) ) != PAPI_OK ) {
@@ -208,5 +299,8 @@ int main( ) {
     );
   /*       MAT BLk Time  DCM   MFLOPS CPI */
   printf( "%d, %d, %lld, %lld, %.2f, %.2f\n", MATLEN, BLOCK, e - s, values[ 0 ], mflops, cpi );
+  freeMatrix(a, MATLEN);
+  freeMatrix(b, MATLEN);
+  freeMatrix(c, MATLEN);
   return( 0 );
 }
