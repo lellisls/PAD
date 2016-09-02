@@ -105,8 +105,8 @@ int main( ) {
   }
   double cpi = ( double ) values[ 2 ] / ( double ) values[ 3 ];
   double icp = ( double ) values[ 3 ] / ( double ) values[ 2 ];
-  /* double flops = ( double ) values[ 1 ]; */
-  double mflops = ( double ) 2 * MATLEN * MATLEN * MATLEN;
+  double mflops = ( double ) values[ 1 ];
+  // double mflops = ( double ) 2 * MATLEN * MATLEN * MATLEN;
   mflops = ( mflops / ( ( double ) ( e - s ) ) );
   /* EXIBINDO INFORMAÇÕES */
   PRINT(

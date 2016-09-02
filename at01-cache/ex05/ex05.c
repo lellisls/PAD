@@ -1,10 +1,13 @@
-#include <cblas.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <papi.h>
 
-#ifndef MATLEN
-#define MATLEN 128
+#ifndef LENGTH
+#define LENGTH 1024
+#endif
+
+#ifndef MODE
+#define MODE 1
 #endif
 
 #ifndef QUIET
@@ -13,21 +16,28 @@
 #define PRINT( exp )
 #endif
 
+#include "papi.h"
+
+void freeMatrix( double **mat ) {
+  for( int i = 0; i < LENGTH; i++ ) {
+    free( mat[ i ] );
+  }
+  free( mat );
+}
 
 int main( ) {
   int EventSet = PAPI_NULL;
   long long values[ 4 ], s, e;
   int retval;
-  double *a, *b, *c;
 
   /* INICIALIZAÇÃO */
 
-  PRINT( printf( "Inicializando Matriz: %dx%d\n", MATLEN, MATLEN ) );
-
-  a = ( double* ) malloc( MATLEN * MATLEN * sizeof( double ) );
-  b = ( double* ) malloc( MATLEN * MATLEN * sizeof( double ) );
-  c = ( double* ) malloc( MATLEN * MATLEN * sizeof( double ) );
-
+  int i;
+  double *a, *b, *c;
+  PRINT( printf( "Inicializando Vetor: %d\n", LENGTH ) );
+  a = ( double* ) malloc( LENGTH * sizeof( double ) );
+  b = ( double* ) malloc( LENGTH * sizeof( double ) );
+  c = ( double* ) malloc( LENGTH * sizeof( double ) );
   /*
    * CONFIGURAÇÃO DO PAPI
    * Init PAPI library
@@ -63,11 +73,20 @@ int main( ) {
   }
   s = PAPI_get_real_usec( );
   /* FUNÇÃO A SER AVALIADA */
-
-  cblas_dgemm( CblasRowMajor, CblasNoTrans, CblasNoTrans,
-               MATLEN, MATLEN, MATLEN, 1.0, a, MATLEN,
-               b, MATLEN, 0.0, c, MATLEN );
-
+  if( MODE == 1 ) {
+    for( i = 0; i < LENGTH; ++i ) {
+      b[ i ] = sin( a[ i ] * 2.0 ) + 1.0;
+    }
+    for( i = 0; i < LENGTH; ++i ) {
+      c[ i ] = cos( b[ i ] + a[ i ] ) + 4.0;
+    }
+  }
+  else {
+    for( i = 0; i < LENGTH; ++i ) {
+      b[ i ] = sin( a[ i ] * 2.0 ) + 1.0;
+      c[ i ] = cos( b[ i ] + a[ i ] ) + 4.0;
+    }
+  }
   /* FIM DA FUNÇÃO A SER AVALIADA */
   e = PAPI_get_real_usec( );
   if( ( retval = PAPI_read( EventSet, &values[ 0 ] ) ) != PAPI_OK ) {
@@ -81,7 +100,7 @@ int main( ) {
   double cpi = ( double ) values[ 2 ] / ( double ) values[ 3 ];
   double icp = ( double ) values[ 3 ] / ( double ) values[ 2 ];
   double mflops = ( double ) values[ 1 ];
-  // double mflops = ( double ) 2 * MATLEN * MATLEN * MATLEN;
+  /* double mflops = ( double ) 2 * LENGTH * LENGTH * LENGTH; */
   mflops = ( mflops / ( ( double ) ( e - s ) ) );
   /* EXIBINDO INFORMAÇÕES */
   PRINT(
@@ -98,8 +117,8 @@ int main( ) {
     printf( "MFLOPS: %g\n", mflops );
     printf( "Fim\n" );
     );
-  /*       MAT BLk Time  DCM   MFLOPS CPI */
-  printf( "%d, %lld, %lld, %.2f, %.2f\n", MATLEN, e - s, values[ 0 ], mflops, cpi );
+  /*      Time  DCM   MFLOPS CPI */
+  printf( "%d, %d, %lld, %lld, %.2f, %.2f\n", LENGTH, MODE, e - s, values[ 0 ], mflops, cpi );
   free( a );
   free( b );
   free( c );
