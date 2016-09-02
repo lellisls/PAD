@@ -1,0 +1,191 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\ifCLASSINFOpdf
+  \usepackage[pdftex]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../pdf/}{../jpeg/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+\else
+  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
+  % will default to the driver specified in the system graphics.cfg if no
+  % driver is specified.
+  \usepackage[dvips]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../eps/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.eps}
+\fi
+\usepackage[cmex10]{amsmath}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{mdwmath}
+\usepackage{mdwtab}
+%\usepackage{eqparbox}
+\usepackage[tight,footnotesize]{subfigure}
+%\usepackage[caption=false]{caption}
+\usepackage[font=footnotesize]{subfig}
+%\usepackage{stfloats}
+\usepackage{url}
+\usepackage{csvsimple,longtable,booktabs}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+\title{Programação de Alto Desempenho\\
+\large Atividade 2 - Otimizando o desempenho de códigos para afinidade de memória}
+
+\author{\IEEEauthorblockN{Lucas Santana Lellis - 69618}
+\IEEEauthorblockA{PPGCC - Instituto de Ciência e Tecnologia\\
+	Universidade Federal de São Paulo} }
+
+% make the title area
+\maketitle
+
+%\IEEEpeerreviewmaketitle
+
+\section{Introdução}
+Nesta atividade foram realizados experimentos relacionados com a otimização do desempenho de algoritmos quanto à afinidade de memória.\\
+Cada experimento foi realizado 5 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles.
+
+Todos os programas foram feitos em C, utilizando a biblioteca PAPI para estimar o tempo total de processamento, quantidade de chache misses em memória cache L2, e o total de operações de ponto flutuante.
+
+As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab:cpu}.
+
+\begin{table}[h]
+\centering
+\caption{Especificações da Máquina}
+\label{tab:cpu}
+\begin{tabular}{ll}
+ CPU & Intel Core i5 - 3470\\
+ Cores & 4\\
+ Threads & 4\\
+ Clock & 3.2 GHz\\
+ Cache L3 & 6144 KB \\
+ Cache L2 & 256 KB * 4 \\
+ Hardware Counters & 11 \\
+ RAM & 8 Gb \\
+ SO & Fedora 4
+\end{tabular}
+\end{table}
+
+\section{Experimento 1}
+Neste experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
+
+\begin{table}[h]
+	\centering
+	\caption{Desempenho obtido no exp 1}
+	\label{tab:exp01}
+	\begin{tabular}{cccccc}%
+		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex01.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+		
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
+\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
+\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
+\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
+\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
+\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
+\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+\end{axis}
+\end{tikzpicture}
+\caption{Comparação do tempo de execução entre as diferentes hierarquias.}
+\label{fig:exp01-time}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 0};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 1};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 2};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 3};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 4};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 5};
+	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação de cache-misses em memória cache L2 entre as diferentes hierarquias.}
+	\label{fig:exp01-l2dcm}
+\end{figure}
+
+\section{Experimento 1}
+Neste experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
+
+\begin{table}[h]
+	\centering
+	\caption{Desempenho obtido no exp 1}
+	\label{tab:exp01}
+	\begin{tabular}{cccccc}%
+		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex01.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+		
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
+	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação do tempo de execução entre as diferentes hierarquias.}
+	\label{fig:exp01-time}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 0};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 1};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 2};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 3};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 4};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 5};
+	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação de cache-misses em memória cache L2 entre as diferentes hierarquias.}
+	\label{fig:exp01-l2dcm}
+\end{figure}
+
+
+
+
+\bibliographystyle{IEEEtran}
+
+% \bibliography{references}
+
+\end{document}
+
+
