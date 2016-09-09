@@ -63,7 +63,7 @@ int main( ) {
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_FP_OPS ) != PAPI_OK ) {
-    printf( "Erro em PAPI_FP_INS\n" );
+    printf( "Erro em PAPI_FP_OPS\n" );
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_TOT_CYC ) != PAPI_OK ) {
@@ -81,11 +81,11 @@ int main( ) {
   s = PAPI_get_real_usec( );
   /* FUNÇÃO A SER AVALIADA */
   for( ii = 0; ii < MATLEN; ii += BLOCK ) {
-    for( jj = 0; jj < MATLEN; jj += BLOCK ) {
-      for( kk = 0; kk < MATLEN; kk += BLOCK ) {
+    for( kk = 0; kk < MATLEN; kk += BLOCK ) {
+      for( jj = 0; jj < MATLEN; jj += BLOCK ) {
         for( i = ii; i < ii + BLOCK; i++ ) {
-          for( j = jj; j < jj + BLOCK; j++ ) {
-            for( k = kk; k < kk + BLOCK; k++ ) {
+          for( k = kk; k < kk + BLOCK; k++ ) {
+            for( j = jj; j < jj + BLOCK; j++ ) {
               c[ i ][ j ] = c[ i ][ j ] + a[ i ][ k ] * b[ k ][ j ];
             }
           }

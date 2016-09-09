@@ -60,7 +60,7 @@ int main( ) {
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_FP_OPS ) != PAPI_OK ) {
-    printf( "Erro em PAPI_FP_INS\n" );
+    printf( "Erro em PAPI_FP_OPS\n" );
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_TOT_CYC ) != PAPI_OK ) {
@@ -80,8 +80,8 @@ int main( ) {
   switch( MODE ) {
       case 0: { /* IJK */
       for( i = 0; i < MATLEN; ++i ) {
-        for( k = 0; k < MATLEN; ++k ) {
-          for( j = 0; j < MATLEN; ++j ) {
+        for( j = 0; j < MATLEN; ++j ) {
+          for( k = 0; k < MATLEN; ++k ) {
             c[ i ][ j ] = c[ i ][ j ] + a[ i ][ k ] * b[ k ][ j ];
           }
         }

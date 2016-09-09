@@ -81,7 +81,7 @@ int main( ) {
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_FP_OPS ) != PAPI_OK ) {
-    printf( "Erro em PAPI_FP_INS\n" );
+    printf( "Erro em PAPI_FP_OPS\n" );
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_TOT_CYC ) != PAPI_OK ) {

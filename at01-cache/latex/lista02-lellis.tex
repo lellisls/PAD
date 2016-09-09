@@ -58,7 +58,7 @@ Todos os programas foram feitos em C, utilizando a biblioteca PAPI para estimar 
 
 As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab:cpu}.
 
-\begin{table}[h]
+\begin{table}[htb!]
 \centering
 \caption{Especificações da Máquina}
 \label{tab:cpu}
@@ -76,9 +76,9 @@ As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab
 \end{table}
 
 \section{Experimento 1}
-Neste experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
+Nesse experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
 
-\begin{table}[h]
+\begin{table}[htb!]
 	\centering
 	\caption{Desempenho obtido no exp 1}
 	\label{tab:exp01}
@@ -86,99 +86,255 @@ Neste experimento foi implementado o algoritmo tradicional para multiplicação 
 		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex01.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-		
+
 	\end{tabular}
 \end{table}
 
+%
+%
+% \begin{figure}[htb!]
+% \centering
+% \begin{tikzpicture}
+% \begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
+% \legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+% \end{axis}
+% \end{tikzpicture}
+% \caption{Comparação do tempo de execução entre as diferentes hierarquias.}
+% \label{fig:exp01-time}
+% \end{figure}
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 2};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 3};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 4};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 5};
+% 	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação de cache-misses em memória cache L2 entre as diferentes hierarquias.}
+% 	\label{fig:exp01-l2dcm}
+% \end{figure}
+
+\section{Experimento 2}
+Nesse experimento foi implementado o algoritmo para multiplicação de matrizes com blocagem, para verificar a diferença no desempenho causada pela mudança do tamanho do bloco para 2, 4, 16 e 64.
 
 
-\begin{figure}
-\centering
-\begin{tikzpicture}
-\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
-\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
-\end{axis}
-\end{tikzpicture}
-\caption{Comparação do tempo de execução entre as diferentes hierarquias.}
-\label{fig:exp01-time}
-\end{figure}
+\begin{table}[htb!]
+	\centering
+	\caption{Desempenho obtido no exp 2}
+	\label{tab:exp02}
+	\begin{tabular}{cccccc}%
+		\bfseries Size & \bfseries Block & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex02.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+
+	\end{tabular}
+\end{table}
+
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 2};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 3};
+% 	\legend{$2$, $4$, $16$, $64$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação do tempo de execução entre os diferentes tamanhos de blocos.}
+% 	\label{fig:exp02-time}
+% \end{figure}
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 2};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 3};
+% 	\legend{$2$, $4$, $16$, $64$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação de cache-misses em memória cache L2 entre os diferentes tamanhos de blocos.}
+% 	\label{fig:exp02-l2dcm}
+% \end{figure}
 
 
-\begin{figure}
+\section{Experimento 3}
+Nesse experimento foi implementado o algoritmo de Strassen .....................
+
+
+\begin{table}[htb!]
+	\centering
+	\caption{Desempenho obtido no exp 3}
+	\label{tab:exp03}
+	\begin{tabular}{cccccc}%
+		\bfseries Size & \bfseries Block & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex03.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+
+	\end{tabular}
+\end{table}
+
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-time.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-time.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-time.txt' index 2};
+% 	\legend{$16$, $32$ , $64$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação do tempo de execução entre os diferentes tamanhos minimos.}
+% 	\label{fig:exp03-time}
+% \end{figure}
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-l2dcm.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-l2dcm.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-l2dcm.txt' index 2};
+% 	\legend{$16$, $32$ , $64$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação de cache-misses em memória cache L2 entre os diferentes tamanhos minimos.}
+% 	\label{fig:exp03-l2dcm}
+% \end{figure}
+
+
+\section{Experimento 4}
+Nesse experimento foi utilizada a função ..... do BLAS
+
+\begin{table}[htb!]
+	\centering
+	\caption{Desempenho obtido no exp 4}
+	\label{tab:exp04}
+	\begin{tabular}{ccccc}%
+		\bfseries Size & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex04.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+
+	\end{tabular}
+\end{table}
+
+Comparando os melhores resultados dos 4 experimentos (considerando os testes com matrizes de tamanho 1024x1024), fazemos então a comparação da Figura \ref{fig:compexperimentos}.
+
+\begin{figure}[htb!]
 	\centering
 	\begin{tikzpicture}
 	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 2};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 3};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 4};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 5};
-	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 0};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 1};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 2};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 3};
+	\legend{$Ex1-IJK$, $Ex2-16 $ , $Ex3-64$, $Ex4$ }
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Comparação de cache-misses em memória cache L2 entre as diferentes hierarquias.}
-	\label{fig:exp01-l2dcm}
+	\caption{Comparação entre os melhores resultados dos quatro experimentos com relação ao tempo.}
+	\label{fig:compexperimentos}
 \end{figure}
 
-\section{Experimento 1}
-Neste experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
 
-\begin{table}[h]
+\section{Experimento 5}
+Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços trabalhando com diferentes estruturas de dados.
+
+\begin{table}[htb!]
 	\centering
-	\caption{Desempenho obtido no exp 1}
-	\label{tab:exp01}
+	\caption{Desempenho obtido no exp 5}
+	\label{tab:exp02}
 	\begin{tabular}{cccccc}%
 		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex01.csv}{}
+		\csvreader[]{tables/ex05.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-		
+
 	\end{tabular}
 \end{table}
 
 
+\section{Experimento 6}
+Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços.
 
-\begin{figure}
+\begin{table}[htb!]
 	\centering
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
-	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação do tempo de execução entre as diferentes hierarquias.}
-	\label{fig:exp01-time}
-\end{figure}
+	\caption{Desempenho obtido no exp 5}
+	\label{tab:exp02}
+	\begin{tabular}{cccccc}%
+		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex06.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+
+	\end{tabular}
+\end{table}
 
 
-\begin{figure}
-	\centering
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 2};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 3};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 4};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 5};
-	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação de cache-misses em memória cache L2 entre as diferentes hierarquias.}
-	\label{fig:exp01-l2dcm}
-\end{figure}
-
+% \section{Experimento XXXX}
+% Nesse experimento foi utilizada a função ..... do BLAS
+%
+% \begin{table}[htb!]
+% 	\centering
+% 	\caption{Desempenho obtido no exp XXXX}
+% 	\label{tab:exp02}
+% 	\begin{tabular}{ccccc}%
+% 		\bfseries Size & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+% 		\csvreader[]{tables/ex0XXXX.csv}{}
+% 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+%
+% 	\end{tabular}
+% \end{table}
+%
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo (ms)}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex0XXXX-time.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex0XXXX-time.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex0XXXX-time.txt' index 2};
+% 	\legend{$16$, $32$ , $64$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação do tempo de execução entre os diferentes tamanhos minimos.}
+% 	\label{fig:exp0XXXX-time}
+% \end{figure}
+%
+%
+% \begin{figure}[htb!]
+% 	\centering
+% 	\begin{tikzpicture}
+% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex0XXXX-l2dcm.txt' index 0};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex0XXXX-l2dcm.txt' index 1};
+% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex0XXXX-l2dcm.txt' index 2};
+% 	\legend{$16$, $32$ , $64$ }
+% 	\end{axis}
+% 	\end{tikzpicture}
+% 	\caption{Comparação de cache-misses em memória cache L2 entre os diferentes tamanhos minimos.}
+% 	\label{fig:exp0XXXX-l2dcm}
+% \end{figure}
 
 
 
@@ -187,5 +343,3 @@ Neste experimento foi implementado o algoritmo tradicional para multiplicação 
 % \bibliography{references}
 
 \end{document}
-
-
