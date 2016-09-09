@@ -62,7 +62,7 @@ As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab
 \centering
 \caption{Especificações da Máquina}
 \label{tab:cpu}
-\begin{tabular}{ll}
+\begin{tabular}{lr}
  CPU & Intel Core i5 - 3470\\
  Cores & 4\\
  Threads & 4\\
@@ -71,18 +71,23 @@ As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab
  Cache L2 & 256 KB * 4 \\
  Hardware Counters & 11 \\
  RAM & 8 Gb \\
- SO & Fedora 4
+ SO & Fedora 24 \\
+ Kernel & 4.7.2-201.fc24.x86\_64 \\
+ GCC & 6.1.1 20160621\\
+ 
 \end{tabular}
 \end{table}
 
-\section{Experimento 1}
+\section{Experimento 1 - Multiplicação Trivial}
 Nesse experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
 
+Na Tabela \ref{tab:exp01} temos um resumo dos experimentos realizados, onde percebemos a clara vantagem que as hierarquias IKJ e KJI têm sobre as demais.Desses resultados podemos perceber que o modelo KJI é mais eficiente para matrizes de 128x128, enquanto o modelo IKJ se sobressai nas demais.\\
+Além disso, percebemos que os experimentos com menores tempos de execução também são os com o menor número de cache misses.
 \begin{table}[htb!]
 	\centering
-	\caption{Desempenho obtido no exp 1}
+	\caption{Multiplicação de matrizes trivial comutando hierarquia de laços.}
 	\label{tab:exp01}
-	\begin{tabular}{cccccc}%
+	\begin{tabular}{llrrrr}%
 		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex01.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
@@ -127,15 +132,18 @@ Nesse experimento foi implementado o algoritmo tradicional para multiplicação 
 % 	\label{fig:exp01-l2dcm}
 % \end{figure}
 
-\section{Experimento 2}
+\section{Experimento 2 - Multiplicação com Blocagem}
 Nesse experimento foi implementado o algoritmo para multiplicação de matrizes com blocagem, para verificar a diferença no desempenho causada pela mudança do tamanho do bloco para 2, 4, 16 e 64.
+A implementação foi feita com base na hierarquia de laços IKJ, que obteve os melhores resutlados em matrizes maiores.
+
+Na tabela \ref{tab:exp02} também percebe-se uma forte relação entre os melhores tempos e o número de cache misses. Neste caso, o bloco de tamanho 16x16 se mostrou mais eficiente para matrizes de tamanho 128x128, enquanto blocos de tamanho 64 foram mais eficientes para as demais.
 
 
 \begin{table}[htb!]
 	\centering
-	\caption{Desempenho obtido no exp 2}
+	\caption{Multiplicação de matrizes IKJ com blocagem, variando tamanho dos blocos. }
 	\label{tab:exp02}
-	\begin{tabular}{cccccc}%
+	\begin{tabular}{llrrrr}%
 		\bfseries Size & \bfseries Block & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex02.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
@@ -177,15 +185,16 @@ Nesse experimento foi implementado o algoritmo para multiplicação de matrizes 
 % \end{figure}
 
 
-\section{Experimento 3}
-Nesse experimento foi implementado o algoritmo de Strassen .....................
+\section{Experimento 3 - Multiplicação de Strassen}
+Nesse experimento foi implementado o algoritmo de Strassen, de forma que a matriz é particionada e realocada em matrizes menores utilizando uma técnica de divisão e conquista. Nessa implementação específica o algoritmo possui uma otimização, pois quando se obtém uma matriz suficientemente pequena, é realizada uma multiplicação trivial IKJ.
 
+Neste experimento, variamos o tamanho da matriz do caso base, que corresponde à segunda coluna da Tabela \ref{tab:exp03}. Percebemos então um empate técnico entre a matriz de tamanho 32x32 e a de tamanho 64x64. Dessa vez, não necessariamente os melhores resultados foram os com o menor número de cache misses, uma vez que cada chamada recursiva requer alocação dinâmica de matrizes, que pode provocar tais variações nos resultados.
 
 \begin{table}[htb!]
 	\centering
-	\caption{Desempenho obtido no exp 3}
+	\caption{Multiplicação de Matrizes de Strassen, variando tamanho da matriz do caso base.}
 	\label{tab:exp03}
-	\begin{tabular}{cccccc}%
+	\begin{tabular}{llrrrr}%
 		\bfseries Size & \bfseries Block & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex03.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
@@ -225,14 +234,14 @@ Nesse experimento foi implementado o algoritmo de Strassen .....................
 % \end{figure}
 
 
-\section{Experimento 4}
-Nesse experimento foi utilizada a função ..... do BLAS
+\section{Experimento 4 - BLAS}
+Nesse experimento foi utilizada a função cblas\_dgemm do BLAS para realizar a multiplicação de duas matrizes, e obtemos assim os resultados da Tabela \ref{tab:exp04}.
 
 \begin{table}[htb!]
 	\centering
-	\caption{Desempenho obtido no exp 4}
+	\caption{Multiplicação de matrizes da biblioteca BLAS}
 	\label{tab:exp04}
-	\begin{tabular}{ccccc}%
+	\begin{tabular}{llrrr}%
 		\bfseries Size & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex04.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
@@ -240,7 +249,20 @@ Nesse experimento foi utilizada a função ..... do BLAS
 	\end{tabular}
 \end{table}
 
-Comparando os melhores resultados dos 4 experimentos (considerando os testes com matrizes de tamanho 1024x1024), fazemos então a comparação da Figura \ref{fig:compexperimentos}.
+Comparando os melhores resultados dos 4 experimentos (considerando os testes com matrizes de tamanho 1024x1024), fazemos então a comparação da Tabela \ref{tab:exp04b}, onde percebemos a clara superioridade do BLAS/ATLAS sobre todas as outras tentativas. Tal fato fica ainda mais evidente na Figura \ref{fig:compexperimentos}.
+
+
+\begin{table}[htb!]
+	\centering
+	\caption{Comparação dos melhores resultados em multiplicação de matrizes de tamanho 1024x1024}
+	\label{tab:exp04b}
+	\begin{tabular}{llrrr}%
+		\bfseries Algorithm & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\csvreader[]{tables/ex04-b.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
+
 
 \begin{figure}[htb!]
 	\centering
@@ -250,7 +272,7 @@ Comparando os melhores resultados dos 4 experimentos (considerando os testes com
 	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 1};
 	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 2};
 	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 3};
-	\legend{$Ex1-IJK$, $Ex2-16 $ , $Ex3-64$, $Ex4$ }
+	\legend{$Trivial-IKJ$, $Blocking-16 $ , $Strassen-32$, $BLAS$ }
 	\end{axis}
 	\end{tikzpicture}
 	\caption{Comparação entre os melhores resultados dos quatro experimentos com relação ao tempo.}
@@ -258,14 +280,14 @@ Comparando os melhores resultados dos 4 experimentos (considerando os testes com
 \end{figure}
 
 
-\section{Experimento 5}
-Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços trabalhando com diferentes estruturas de dados.
+\section{Experimento 5 - Fusão de Laços}
+Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços. Na Tabela \ref{tab:exp05}, a peimeira linha representa o algoritmo sem fusão de laços, e a segunda, o algoritmo com fusão de laços. Nesse experimento, percebemos uma leve melhora no desempenho do algoritmo.
 
 \begin{table}[htb!]
 	\centering
-	\caption{Desempenho obtido no exp 5}
-	\label{tab:exp02}
-	\begin{tabular}{cccccc}%
+	\caption{Técnica de fusão de laços.}
+	\label{tab:exp05}
+	\begin{tabular}{llrrrr}%
 		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex05.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
@@ -274,13 +296,14 @@ Nesse experimento foi feita a comparação do desempenho da técnica de fusão d
 \end{table}
 
 
-\section{Experimento 6}
-Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços.
+\section{Experimento 6 - Estruturas de dados}
+Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços trabalhando com diferentes estruturas de dados. Na tabela \ref{tab:exp06}, a primeira linha representa o formato \textbf{double abc[ ? ][3]}, a segunda linha o formato \textbf{double abc[3][ ? ]}, e a terceira um array do tipo de dados \textbf{struct \{double a, b, c; \} est\_abc }. Nesse experimento percebemos que embora possua o menor número de cache misses, o terceiro modo não é o mais rápido, perdendo por pouco do primeiro modo.
+Muito embora ambos sejam virtualmente equivalentes, pois em ambos os casos, os valores a, b e c estão contíguos na memória.
 
 \begin{table}[htb!]
 	\centering
 	\caption{Desempenho obtido no exp 5}
-	\label{tab:exp02}
+	\label{tab:exp06}
 	\begin{tabular}{cccccc}%
 		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex06.csv}{}
@@ -289,6 +312,13 @@ Nesse experimento foi feita a comparação do desempenho da técnica de fusão d
 	\end{tabular}
 \end{table}
 
+
+\section{Conclusão}
+Os experimentos realizados demonstraram a grande vantagem computacional obtida por meio da utilização de técnicas que favorecem a afinidade de memória, adequando-se a hierarquia dos laços, e também as estruturas de dados de forma que se faça o uso mais eficiente do processador, evitando que este permaneça ocioso.
+
+Porém, isso não é o suficiente para se obter um desempenho ótimo do algoritmo, uma vez que os resultados variam de acordo com a complexidade dos problemas, e uma vez que desconhecemos todos os recursos adicionais presentes na arquitetura do processador, que o BLAS certamente faz uso.
+
+Isso também evidencia a superioridade e a importância da utilização de bibliotecas otimizadas de operações de álgebra linear
 
 % \section{Experimento XXXX}
 % Nesse experimento foi utilizada a função ..... do BLAS
