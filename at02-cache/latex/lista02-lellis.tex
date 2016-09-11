@@ -79,16 +79,16 @@ As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab
 \end{table}
 
 \section{Experimento 1 - Multiplicação Trivial}
-Nesse experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: ijk, ikj, jik, jki, kij e kji.
+Nesse experimento foi implementado o algoritmo tradicional para multiplicação de matrizes, sem blocagem, para verificar a diferença no desempenho causada pela mudança da hierarquia dos laços: IJK, IKJ, JIK, JKI, KIJ e KJI.
 
-Na Tabela \ref{tab:exp01} temos um resumo dos experimentos realizados, onde percebemos a clara vantagem que as hierarquias IKJ e KJI têm sobre as demais.Desses resultados podemos perceber que o modelo KJI é mais eficiente para matrizes de 128x128, enquanto o modelo IKJ se sobressai nas demais.\\
+Na Tabela \ref{tab:exp01} temos um resumo dos experimentos realizados, onde percebemos a clara vantagem que as hierarquias IKJ e KJI têm sobre as demais. Desses resultados podemos perceber que o modelo KJI é mais eficiente para matrizes de 128x128, enquanto o modelo IKJ se sobressai nas demais.\\
 Além disso, percebemos que os experimentos com menores tempos de execução também são os com o menor número de cache misses.
 \begin{table}[htb!]
 	\centering
 	\caption{Multiplicação de matrizes trivial comutando hierarquia de laços.}
 	\label{tab:exp01}
 	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Size & \bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex01.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
 
@@ -144,7 +144,7 @@ Na tabela \ref{tab:exp02} também percebe-se uma forte relação entre os melhor
 	\caption{Multiplicação de matrizes IKJ com blocagem, variando tamanho dos blocos. }
 	\label{tab:exp02}
 	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Block & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Size & \bfseries Block & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex02.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
 
@@ -195,7 +195,7 @@ Neste experimento, variamos o tamanho da matriz do caso base, que corresponde à
 	\caption{Multiplicação de Matrizes de Strassen, variando tamanho da matriz do caso base.}
 	\label{tab:exp03}
 	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Block & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Size & \bfseries Block & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex03.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
 
@@ -242,7 +242,7 @@ Nesse experimento foi utilizada a função cblas\_dgemm do BLAS para realizar a 
 	\caption{Multiplicação de matrizes da biblioteca BLAS}
 	\label{tab:exp04}
 	\begin{tabular}{llrrr}%
-		\bfseries Size & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Size & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex04.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
 
@@ -257,7 +257,7 @@ Comparando os melhores resultados dos 4 experimentos (considerando os testes com
 	\caption{Comparação dos melhores resultados em multiplicação de matrizes de tamanho 1024x1024}
 	\label{tab:exp04b}
 	\begin{tabular}{llrrr}%
-		\bfseries Algorithm & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Algorithm & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex04-b.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
 	\end{tabular}
@@ -288,7 +288,7 @@ Nesse experimento foi feita a comparação do desempenho da técnica de fusão d
 	\caption{Técnica de fusão de laços.}
 	\label{tab:exp05}
 	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Size & \bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex05.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
 
@@ -305,7 +305,7 @@ Muito embora ambos sejam virtualmente equivalentes, pois em ambos os casos, os v
 	\caption{Desempenho obtido no exp 5}
 	\label{tab:exp06}
 	\begin{tabular}{cccccc}%
-		\bfseries Size & \bfseries Mode & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+		\bfseries Size & \bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 		\csvreader[]{tables/ex06.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
 
@@ -328,7 +328,7 @@ Isso também evidencia a superioridade e a importância da utilização de bibli
 % 	\caption{Desempenho obtido no exp XXXX}
 % 	\label{tab:exp02}
 % 	\begin{tabular}{ccccc}%
-% 		\bfseries Size & \bfseries Time(ms) & \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
+% 		\bfseries Size & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
 % 		\csvreader[]{tables/ex0XXXX.csv}{}
 % 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
 %

@@ -45,8 +45,8 @@ int main( ) {
     printf( "Erro em PAPI_L2_DCM\n" );
     exit( 1 );
   }
-  if( PAPI_add_event( EventSet, PAPI_FP_OPS ) != PAPI_OK ) {
-    printf( "Erro em PAPI_FP_OPS\n" );
+  if( PAPI_add_event( EventSet, PAPI_DP_OPS ) != PAPI_OK ) {
+    printf( "Erro em PAPI_DP_OPS\n" );
     exit( 1 );
   }
   if( PAPI_add_event( EventSet, PAPI_TOT_CYC ) != PAPI_OK ) {
@@ -86,7 +86,7 @@ int main( ) {
   /* EXIBINDO INFORMAÇÕES */
   PRINT(
     printf( "PAPI_L2_DCM = %lld\n", values[ 0 ] );
-    printf( "PAPI_FP_OPS = %lld\n", values[ 1 ] );
+    printf( "PAPI_DP_OPS = %lld\n", values[ 1 ] );
 
     /* CPI */
     printf( "PAPI_TOT_CYC = %lld\n", values[ 2 ] );
