@@ -1,6 +1,6 @@
 all: tests
 
-CFLAGS=-Iinc obj/* -lpapi -g -O3 -mavx -ftree-vectorize -fopt-info-vec-all
+CFLAGS=-Iinc obj/* -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize -fopt-info-vec-all
 GREP=2>&1 | grep -e "LOOP VECTORIZED" -e "error" || true
 
 stats: clean

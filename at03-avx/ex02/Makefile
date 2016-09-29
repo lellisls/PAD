@@ -1,6 +1,6 @@
 all: least-squares
 
-CFLAGS=-Iinc obj/* -lpapi -g -O3 -mavx -ftree-vectorize -fopt-info-vec-all
+CFLAGS=-Iinc obj/* -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize -fopt-info-vec-all
 GREP=2>&1 | grep -e "LOOP VECTORIZED" -e "error" || true
 
 stats: clean
@@ -12,13 +12,19 @@ least-squares: stats
 least-squares-avx: stats
 	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
 
-test1: least-squares least-squares-avx
+# least-squares-avx2: stats
+	# gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+
+
+test1: least-squares least-squares-avx #least-squares-avx2
 	bin/least-squares tests/test1.txt
 	bin/least-squares-avx tests/test1.txt
+	# bin/least-squares-avx2 tests/test1.txt
 
-test2: least-squares least-squares-avx
+test2: least-squares least-squares-avx #least-squares-avx2
 	bin/least-squares
 	bin/least-squares-avx
+	# bin/least-squares-avx2
 
 tests: test1 test2
 
