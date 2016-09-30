@@ -1,0 +1,10 @@
+Least Squares - Simples, 179806, 21325359, 3830.1224, 6.04
+Least Squares - Simples, 178685, 21338583, 3849.9321, 6.02
+Least Squares - Simples, 178499, 21342988, 3852.2656, 6.02
+Least Squares - Simples, 185978, 21241828, 3721.3103, 6.25
+Least Squares - Simples, 178877, 21336368, 3845.4155, 6.01
+Least Squares - AVX, 184445, 21908298, 4150.9876, 6.19
+Least Squares - AVX, 176969, 22017873, 4283.2621, 5.97
+Least Squares - AVX, 177162, 22011242, 4279.3958, 5.96
+Least Squares - AVX, 177290, 22000849, 4275.0121, 5.97
+Least Squares - AVX, 176967, 22015445, 4283.8307, 5.97

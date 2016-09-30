@@ -1,0 +1,3 @@
+Exemplo, Time, L2_DCM, MFLOPS, CPE
+Exercicio E - Padrão, 0, 22, nan, 0.00
+Exercicio E - AVX, 0, 21, nan, 0.00

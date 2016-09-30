@@ -1,0 +1,3 @@
+Exemplo, Time, L2_DCM, MFLOPS, CPE
+Least Squares - Simples, 180369, 21317025, 3819.8092, 6.07
+Least Squares - AVX, 178567, 21990741, 4254.4977, 6.01
