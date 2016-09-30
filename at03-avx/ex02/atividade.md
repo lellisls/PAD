@@ -1,4 +1,5 @@
-# Atividade 2
+# Atividade 3 - Otimização por vetorização
+## Ex02
 
 O método dos **mínimos quadrados** é uma técnica padrão de otimização matemática para encontrar o **melhor ajuste para um conjunto de dados** tentando **minimizar a soma dos quadrados** das diferenças entre o valor estimado e os dados observados. O algoritmo consiste em encontrar uma equação do tipo: **y = mx + b**, onde, dado um conjunto de _n_ pontos _{(x1,y1), x2,y2),...,xn,yn)}_, deve-se calcular:
 

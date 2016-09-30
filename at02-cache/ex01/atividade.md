@@ -1,3 +1,6 @@
+# Atividade 2 - Otimizando o desempenho de códigos para afinidade de memória
+## Ex01
+
 Implemente, em linguagem C ou Fortran, todas as 6 diferentes formas de se calcular
 a multiplicação de matriz tradicional sem blocagem (no-blocking), mudando a hierarquia
 dos laços: ijk, ikj, jik, jki, kij, kji.

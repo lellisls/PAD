@@ -1,3 +1,6 @@
+# Atividade 2 - Otimizando o desempenho de códigos para afinidade de memória
+## Ex06
+
 Modifique o código com fusão de laços do exercício 5 (segundo algoritmo)
 trabalhando com estruturas de dados diferentes da seguinte forma:
 

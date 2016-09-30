@@ -1,4 +1,5 @@
-# Atividade 1
+# Atividade 3 - Otimização por vetorização
+## Ex01
 
 Cheque no compilador GCC (usando as opções: **-O3 -msse -ftree-vectorize -fopt-info-vec-all**  ,  procure pela frase "LOOP VECTORIZED"):
 

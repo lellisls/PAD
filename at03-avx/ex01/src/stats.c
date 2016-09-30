@@ -26,10 +26,10 @@ void inicializacao( ) {
     printf( "Erro em PAPI_L2_DCM\n" );
     exit( 1 );
   }
-  // if( PAPI_add_event( EventSet, PAPI_SP_OPS ) != PAPI_OK ) {
-  //   printf( "Erro em PAPI_SP_OPS\n" );
-  //   exit( 1 );
-  // }
+  if( PAPI_add_event( EventSet, PAPI_SP_OPS ) != PAPI_OK ) {
+    printf( "Erro em PAPI_SP_OPS\n" );
+    exit( 1 );
+  }
   if( PAPI_add_event( EventSet, PAPI_TOT_CYC ) != PAPI_OK ) {
     printf( "Erro em PAPI_TOT_CYC\n" );
     exit( 1 );
@@ -62,18 +62,18 @@ void avaliacao( char *LABEL, int size ) {
    * double icp = ( double ) values[ 3 ] / ( double ) values[ 2 ];
    */
   double cpe = ( double ) values[ 2 ] / size;
-  // double mflops = ( double ) values[ 1 ];
+  double mflops = ( double ) values[ 1 ];
   // mflops = ( mflops / ( ( double ) ( e - s ) ) );
   /* EXIBINDO INFORMAÇÕES */
   // printf( "%s, %lld, %lld, %.4f, %.2f\n", LABEL, e - s, values[ 0 ], mflops, cpe );
 
   PRINT(
     printf( "PAPI_L2_DCM = %lld\n", values[ 0 ] );
-    // printf( "PAPI_SP_OPS = %lld\n", values[ 1 ] );
+    printf( "PAPI_SP_OPS = %lld\n", values[ 1 ] );
 
     /* CPI */
-    printf( "PAPI_TOT_CYC = %lld\n", values[ 1 ] );
-    printf( "PAPI_TOT_INS = %lld\n", values[ 2 ] );
+    printf( "PAPI_TOT_CYC = %lld\n", values[ 2 ] );
+    printf( "PAPI_TOT_INS = %lld\n", values[ 3 ] );
     printf( "CPE: %.2f\n", cpe );
 
     printf( "Wallclock time: %lld us\n", e - s );
