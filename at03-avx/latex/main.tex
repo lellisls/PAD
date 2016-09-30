@@ -36,7 +36,6 @@
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
 \hyphenation{op-tical net-works semi-conduc-tor}
-
 \usepackage{listings}
 
 \lstset{language=C++,
@@ -127,9 +126,9 @@ As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab
 \end{table}
 
 \section{Experimento 1}
-Nesse experimento foram feitos diversos testes envolvendo 6 diferentes tipos de cálculos, sendo avaliada a capacidade do compilador em vetorizá-los automaticamente, sendo feitas também as adaptações possíveis e necessárias para que isso seja possível, sendo também implementadas versões vetorizadas fazendo-se uso de funções intrínsecas do padrão avx.
+Nesse experimento foram feitos diversos testes envolvendo 6 diferentes tipos de cálculos, sendo avaliada a capacidade do compilador em vetorizá-los automaticamente, sendo feitas também as adaptações possíveis e necessárias para que isso seja possível, sendo também implementadas versões vetorizadas fazendo-se uso de funções intrínsecas do padrão avx. Em todos os experimentos, foram utilizados vetores de tamanho $50000000$, iniciados de forma pseudo-aleatoria, com seed fixa de valor $424242$.
 
-\subsection{Algoritmo 1}
+\subsection{Algoritmo A}
 O primeiro algoritmo consiste no seguinte cálculo:
 
 \begin{lstlisting}
@@ -166,7 +165,7 @@ Assim, foi feita uma segunda versão, agora vetorizada por funções instrínsec
 \end{lstlisting}
 
 A corretude do algoritmo é facilmente observável pelas operações aritméticas realizadas, e também pelos resultados obtidos ao final da execução dos dois programas.
-Em um teste padronizado, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos o seguinte resultado nas dez ultimas posições do vetor $a$: \cite{wiki:BLAS}
+Em um teste padronizado, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos o seguinte resultado nas dez ultimas posições do vetor $a$: %\cite{wiki:BLAS}
 
 \begin{table}[htb!]
 \centering
@@ -177,18 +176,311 @@ Em um teste padronizado, em que os vetores são inicializados com os mesmos valo
   & 22.80 & 357.32 & 338.45 & 254.81 & 265.32\\
 \end{tabular}
 \end{table}
-A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.01}
+
+A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.01}.
 
 \begin{table}[htb!]
 	\centering
-	\caption{Multiplicação de matrizes trivial comutando hierarquia de laços.}
+	\caption{Análise de desempenho do experimento 1 a}
 	\label{tab:exp1.01}
 	\begin{tabular}{lrrrr}%
 		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
-		\csvreader[]{tables/ex-a.csv}{}
+		\csvreader[]{tables/ex_a.csv}{}
 		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
 	\end{tabular}
 \end{table}
+
+\subsection{Algoritmo B}
+O algoritmo consiste no seguinte cálculo:
+
+\begin{lstlisting}
+  for (i=0; i<N-1; i++) {
+    x[ i ] = y[ i ] + z[ i ];
+    a[ i ] = x[ i+1 ] + 1.0;
+  }
+\end{lstlisting}
+
+Ao compilar este exemplo com a flag ``-fopt-info-vec-all'' não pudemos observar o texto: ``note: LOOP VECTORIZED'', e por isso, foi feita uma pequena alteração para habilitar a vetorização automática desse laço.
+
+\begin{lstlisting}
+  for( i = 0; i < N - 1; i++ ) {
+    a[ i ] = x[ i + 1 ] + 1.0;
+    x[ i ] = y[ i ] + z[ i ];
+  }
+\end{lstlisting}
+
+Ao compilar este exemplo com a flag ``-fopt-info-vec-all'', pudemos observar a seguinte mensagem: ``src/exercicio\_b.c:25:3: note: LOOP VECTORIZED''.
+
+Assim, foi feita uma terceira versão, agora vetorizada por funções instrínsecas desse mesmo algoritmo:
+
+\begin{lstlisting}
+  ones = _mm256_set1_ps( 1.0 );
+  for( i = 0; i < N - 9; i += 8 ) {
+    v1 = _mm256_load_ps( x + i + 1 );
+    v2 = _mm256_add_ps( v1, ones );
+    _mm256_store_ps( a + i, v2 );
+    v1 = _mm256_load_ps( y + i );
+    v2 = _mm256_load_ps( z + i );
+    v2 = _mm256_add_ps( v1, v2 );
+    _mm256_store_ps( x + i, v2 );
+  }
+  for( ; i < N - 1; i++ ) {
+    a[ i ] = x[ i + 1 ] + 1.0;
+    x[ i ] = y[ i ] + z[ i ];
+  }
+\end{lstlisting}
+
+A corretude do algoritmo é garantida pois a inversão da relação de antidependência não altera o resultado, e em contrapartida permite que o algoritmo seja paralelizado automaticamente pelo compilador. A mesma lógica foi utilizada na versão com paralelização intrínseca. Em testes padronizados, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos na Tabela  nas dez ultimas posições do vetor $a$, e em seguida o vetor $x$: %\cite{wiki:BLAS}
+
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{l c c c c c c c c c c }
+  Versao original & 203.17 & 111.63 & 76.05 & 171.88 & 48.31 \\
+  & 73.78 & 19.93 & 169.58 & 129.03 & 23.91 \\
+  Versao vetorizada & 203.17 & 111.63 & 76.05 & 171.88 & 48.31 \\
+  & 73.78 & 19.93 & 169.58 & 129.03 & 23.91 \\
+  Versao intrinseca & 203.17 & 111.63 & 76.05 & 171.88 & 48.31 \\
+  & 73.78 & 19.93 & 169.58 & 129.03 & 23.91
+\end{tabular}
+\label{tab:exp2.testea}
+\end{table}
+
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{ l c c c c c c c c c c }
+  Versao original & 194.57 & 74.57 & 155.35 & 282.08 & 21.80\\
+  & 356.32 & 337.45 & 253.81 & 264.32 & 128.03 \\
+  Versao vetorizada & 194.57 & 74.57 & 155.35 & 282.08 & 21.80\\
+  & 356.32 & 337.45 & 253.81 & 264.32 & 128.03 \\
+  Versão Intrinseca & 194.57 & 74.57 & 155.35 & 282.08 & 21.80\\
+  & 356.32 & 337.45 & 253.81 & 264.32 & 128.03
+\end{tabular}
+\label{tab:exp2.testeb}
+\end{table}
+
+A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.02}
+
+\begin{table}[htb!]
+	\centering
+	\caption{Análise de desempenho do experimento 1 b}
+	\label{tab:exp1.02}
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex_b.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
+
+
+\subsection{Algoritmo C}
+O algoritmo consiste no seguinte cálculo:
+
+\begin{lstlisting}
+  for( i = 0; i < N - 1; i++ ) {
+    x[ i ] = a[ i ] + z[ i ];
+    a[ i ] = x[ i + 1 ] + 1.0;
+  }
+\end{lstlisting}
+
+Ao compilar este exemplo com a flag ``-fopt-info-vec-all'' não pudemos observar o texto: ``note: LOOP VECTORIZED'', e por isso, foi feita uma pequena alteração para habilitar a vetorização automática desse laço, neste caso, a falsa relação de dependência foi corrigida a partir da utilização de uma variável auxiliar.
+
+\begin{lstlisting}
+  for( i = 0; i < N - 1; i++ ) {
+    aux = a[ i ] + z[ i ];
+    a[ i ] = x[ i + 1 ] + 1.0;
+    x[ i ] = aux;
+  }
+\end{lstlisting}
+
+Ao compilar este exemplo com a flag ``-fopt-info-vec-all'', pudemos observar a seguinte mensagem: ``src/exercicio\_c.c:22:3: note: LOOP VECTORIZED''.
+
+Assim, foi feita uma terceira versão, agora vetorizada por funções instrínsecas desse mesmo algoritmo:
+
+\begin{lstlisting}
+  ones = _mm256_set1_ps( 1.0 );
+  for( i = 0; i < N - 9; i += 8 ) {
+    v1 = _mm256_load_ps( a + i );
+    v2 = _mm256_load_ps( z + i );
+    v3 = _mm256_add_ps( v1, v2 ); //aux
+
+    v1 = _mm256_load_ps( x + i + 1);
+    v1 = _mm256_add_ps( v1, ones);
+    _mm256_store_ps( a + i, v1 );
+    _mm256_store_ps( x + i, v3 );
+  }
+  for( ; i < N - 1; i++ ) {
+    x[ i ] = a[ i ] + z[ i ];
+    a[ i ] = x[ i + 1 ] + 1.0;
+  }
+\end{lstlisting}
+
+A corretude do algoritmo é garantida e não está sujeita à variações nos resultados.
+Em testes padronizados, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos na Tabela  nas dez ultimas posições do vetor $a$, e em seguida o vetor $x$: %\cite{wiki:BLAS}
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{l c c c c c c c c c c }
+  Versao original & 208.92 & 209.19 & 197.92 & 79.58 & 107.30\\
+   & 189.40 & 54.15 & 71.08 & 49.35 & 99.84 \\
+  Versao vetorizada & 208.92 & 209.19 & 197.92 & 79.58 & 107.30\\
+   & 189.40 & 54.15 & 71.08 & 49.35 & 99.84 \\
+  Versao intrinseca & 208.92 & 209.19 & 197.92 & 79.58 & 107.30\\
+   & 189.40 & 54.15 & 71.08 & 49.35 & 99.84
+\end{tabular}
+\label{tab:exp2.testea}
+\end{table}
+
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{ l c c c c c c c c c c }
+  Versao original & 48.50 & 101.70 & 75.22 & 307.19 & 370.98\\
+   & 259.06 & 263.70 & 259.64 & 158.99 & 48.35 \\
+  Versao vetorizada & 48.50 & 101.70 & 75.22 & 307.19 & 370.98\\
+   & 259.06 & 263.70 & 259.64 & 158.99 & 48.35 \\
+  Versão Intrinseca & 48.50 & 101.70 & 75.22 & 307.19 & 370.98\\
+   & 259.06 & 263.70 & 259.64 & 158.99 & 48.35
+\end{tabular}
+\label{tab:exp2.testeb}
+\end{table}
+
+A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.03}
+
+\begin{table}[htb!]
+	\centering
+	\caption{Análise de desempenho do experimento 1 c}
+	\label{tab:exp1.03}
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex_c.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
+
+
+\subsection{Algoritmo D}
+O primeiro algoritmo consiste no seguinte cálculo:
+\begin{lstlisting}
+  for( i = 0; i < N; i++ ) {
+    t = y[ i ] + z[ i ];
+    a[ i ] = t + 1.0 / t;
+  }
+\end{lstlisting}
+
+Ao compilar este exemplo com a flag ``-fopt-info-vec-all'', pudemos observar a seguinte mensagem: ``src/exercicio\_d.c:25:3: note: LOOP VECTORIZED'', que coincide exatamente com o laço descrito acima.
+
+Assim, foi feita uma segunda versão, agora vetorizada por funções instrínsecas desse mesmo algoritmo:
+
+\begin{lstlisting}
+  ones = _mm256_set1_ps( 1.0 );
+  for( i = 0; i < N - 8; i += 8 ) {
+    v1 = _mm256_load_ps( y + i );
+    v2 = _mm256_load_ps( z + i );
+    v1 = _mm256_add_ps( v1, v2 );
+    v2 = _mm256_div_ps( ones, v1 );
+    v1 = _mm256_add_ps( v1, v2 );
+    _mm256_store_ps( a + i, v1 );
+  }
+  for( ; i < N; i++ ) {
+    t = y[ i ] + z[ i ];
+    a[ i ] = t + 1.0 / t;
+  }
+\end{lstlisting}
+
+A corretude do algoritmo é facilmente observável pelas operações aritméticas realizadas, e também pelos resultados obtidos ao final da execução dos dois programas.
+Em um teste padronizado, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos o seguinte resultado nas dez ultimas posições do vetor $a$:
+
+%\cite{wiki:BLAS}
+\begin{table}[htb!]
+\centering
+\begin{tabular}{ l c c c c c c c c c c }
+  Versao original & 194.58 & 74.58 & 155.35 & 282.08 & 21.85 \\
+  & 356.33 & 337.45 & 253.82 & 264.33 & 286.58 \\
+  Versao vetorizada & 194.58 & 74.58 & 155.35 & 282.08 & 21.85 \\
+  & 356.33 & 337.45 & 253.82 & 264.33 & 286.58 \\
+\end{tabular}
+\end{table}
+
+
+A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.04}.
+
+\begin{table}[htb!]
+	\centering
+	\caption{Análise de desempenho do experimento 1 d}
+	\label{tab:exp1.04}
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex_d.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
+
+\subsection{Algoritmo e}
+O primeiro algoritmo consiste no seguinte cálculo:
+\begin{lstlisting}
+  for( i = 0; i < N; i++ ) {
+    s += z[ i ];
+  }
+\end{lstlisting}
+
+Embora seja um exemplo simples, não pudemos observar a vetorização automática de uma operação de redução, e a única opção seria habilitar outras funções do compilador como a flag ``fast-math'', que resultou numa variação muito grande dos resultados, e por esse motivo não foi adotada.
+
+Assim, foi feita uma segunda versão, agora vetorizada por funções instrínsecas desse mesmo algoritmo, onde os dados são armazenados em um acumulador, e somados ao final.
+
+\begin{lstlisting}
+  acc = _mm256_xor_ps( acc, acc );
+  for( i = 0; i < N - 8; i += 8 ) {
+    data = _mm256_load_ps( z + i );
+    acc = _mm256_add_ps( acc, data );
+  }
+  for( ; i < N; i++ ) {
+    s += z[ i ];
+  }
+  for( i = 0; i < 8; i++ ) {
+    s += acc[ i ];
+  }
+\end{lstlisting}
+
+A corretude do algoritmo é facilmente observável pelas operações aritméticas realizadas, mas é esperada uma variação nos resultados pela mudança na ordem em que são realizadas as operações de ponto flutuante.
+Em um teste padronizado, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos no primeiro algoritmo o valor de $s = 535541824.0$ e no segundo, o valor de $ s = 535541856.0 $. Trata-se de uma diferença grande mas ainda aceitável se comparada à outras alternativas.
+
+A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.05}.
+
+\begin{table}[htb!]
+	\centering
+	\caption{Análise de desempenho do experimento 1 e}
+	\label{tab:exp1.05}
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex_e.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
+
+
+\subsection{Algoritmo f}
+O primeiro algoritmo consiste no seguinte cálculo:
+\begin{lstlisting}
+  for( i = 1; i < N; i++ ) {
+    a[ i ] = a[ i - 1 ] + b[ i ];
+  }
+\end{lstlisting}
+
+Diferente dos exercícios anteriores, este algoritmo possui uma dependência real e intratável. A análise do desempenho desse algoritmo se dá então pela Tabela \ref{tab:exp1.06}.
+
+\begin{table}[htb!]
+	\centering
+	\caption{Análise de desempenho do experimento 1 f}
+	\label{tab:exp1.06}
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex_f.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
+
 
 % \begin{figure}[htb!]
 % \centering
@@ -284,6 +576,6 @@ A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.01}
 
 
 
-\bibliographystyle{IEEEtran}
-\bibliography{IEEEabrv,references}
+% \bibliographystyle{IEEEtran}
+% \bibliography{IEEEabrv,references}
 \end{document}

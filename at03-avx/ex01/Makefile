@@ -4,7 +4,7 @@ debug ?= 0
 quiet ?= 0
 info-vec-all ?= 0
 gprof ?= 0
-
+stats ?= 1
 
 CFLAGS=-Iinc  -I/home-local/aluno/papi/include -L/home-local/aluno/papi/lib -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize
 GREP=
@@ -16,6 +16,10 @@ endif
 
 ifneq ($(quiet), 0)
 	CFLAGS+= -DQUIET
+endif
+
+ifneq ($(quiet), 1)
+	CFLAGS+= -DDISABLESTATS
 endif
 
 stats: clean

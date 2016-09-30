@@ -16,7 +16,7 @@ html:
 ps:	dvi
 	dvips -t letter ${filename}.dvi
 
-dvi:
+dvi: clean
 	latex ${filename}
 	bibtex ${filename}||true
 	latex ${filename}
@@ -29,4 +29,4 @@ aread:
 	acroread ${filename}.pdf
 
 clean:
-	rm -f *.{ps,pdf,log,aux,out,dvi,bbl,blg}
+	rm -f *.ps *.pdf *.log *.aux *.out *.dvi *.bbl *.blg *.pgf-plot.gnuplot *.pgf-plot.table

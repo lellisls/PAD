@@ -37,6 +37,7 @@ int main( ) {
   PRINT( printf( "%f\n", s ); )
 
   free( z );
+  volatile double s2 = s;
   /* Adaptação para que as operações sobre 's' serem detectadas. */
   return( s * 0 );
 }

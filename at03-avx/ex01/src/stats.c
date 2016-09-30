@@ -7,6 +7,7 @@ int EventSet = PAPI_NULL;
 long long values[ 4 ], s, e;
 
 void inicializacao( ) {
+  #ifndef DISABLESTATS
   /* INICIALIZAÇÃO */
   int retval;
   /*
@@ -43,12 +44,13 @@ void inicializacao( ) {
     exit( 1 );
   }
   s = PAPI_get_real_usec( );
+  #endif
 }
 
 void avaliacao( char *LABEL, int size ) {
+  #ifndef DISABLESTATS
   int retval;
   /* FIM DA FUNÇÃO A SER AVALIADA */
-  e = PAPI_get_real_usec( );
   if( ( retval = PAPI_read( EventSet, &values[ 0 ] ) ) != PAPI_OK ) {
     printf( "Erro em PAPI_read" );
     exit( 1 );
@@ -80,4 +82,6 @@ void avaliacao( char *LABEL, int size ) {
     printf( "MFLOPS: %g\n", mflops );
     printf( "Fim\n" );
     );
+    e = PAPI_get_real_usec( );
+    #endif
 }
