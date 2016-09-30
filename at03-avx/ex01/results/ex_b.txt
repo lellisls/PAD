@@ -1,0 +1,15 @@
+Exercicio B - Padrão, 116015, 5337416, 911.9222, 6.15
+Exercicio B - Padrão, 116793, 5158075, 986.6602, 6.12
+Exercicio B - Padrão, 115600, 5352724, 915.8740, 6.14
+Exercicio B - Padrão, 120857, 5084993, 875.9401, 6.00
+Exercicio B - Padrão, 115971, 5199364, 913.4334, 6.13
+Exercicio B - Modificado, 97072, 6473475, 1384.2320, 4.81
+Exercicio B - Modificado, 97397, 6470486, 1359.4762, 4.80
+Exercicio B - Modificado, 96357, 6480170, 1376.0230, 4.83
+Exercicio B - Modificado, 96467, 6479060, 1383.9370, 4.79
+Exercicio B - Modificado, 131281, 5783058, 994.0505, 4.19
+Exercicio B - AVX, 103233, 6752075, 2708.8823, 5.12
+Exercicio B - AVX, 115054, 6460397, 2364.0240, 4.81
+Exercicio B - AVX, 101669, 6724915, 2777.8773, 5.18
+Exercicio B - AVX, 116633, 6411169, 2345.3140, 4.73
+Exercicio B - AVX, 110592, 6559144, 2482.8070, 4.90

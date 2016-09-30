@@ -1,0 +1,15 @@
+Exercicio C - Padrão, 99405, 3994429, 1168.7937, 4.82
+Exercicio C - Padrão, 103186, 4161927, 1108.8091, 4.93
+Exercicio C - Padrão, 117513, 3560071, 898.3206, 4.65
+Exercicio C - Padrão, 98233, 4164813, 1079.8482, 4.95
+Exercicio C - Padrão, 124189, 3195030, 851.9091, 4.57
+Exercicio C - Modificado, 90134, 5863163, 1525.4324, 4.41
+Exercicio C - Modificado, 90612, 5925061, 1526.0965, 4.42
+Exercicio C - Modificado, 91109, 5871851, 1509.0356, 4.43
+Exercicio C - Modificado, 89740, 5754471, 1505.9308, 4.33
+Exercicio C - Modificado, 90418, 5770088, 1504.5054, 4.34
+Exercicio C - AVX, 92548, 5927481, 3523.6168, 4.60
+Exercicio C - AVX, 93718, 5966732, 3625.1411, 4.62
+Exercicio C - AVX, 92339, 5873406, 3573.9951, 4.56
+Exercicio C - AVX, 92309, 5809066, 3485.6303, 4.55
+Exercicio C - AVX, 93819, 5935509, 3504.2169, 4.66
