@@ -63,9 +63,9 @@ void avaliacao( char *LABEL, int size ) {
    */
   double cpe = ( double ) values[ 2 ] / size;
   double mflops = ( double ) values[ 1 ];
-  // mflops = ( mflops / ( ( double ) ( e - s ) ) );
+  mflops = ( mflops / ( ( double ) ( e - s ) ) );
   /* EXIBINDO INFORMAÇÕES */
-  // printf( "%s, %lld, %lld, %.4f, %.2f\n", LABEL, e - s, values[ 0 ], mflops, cpe );
+  printf( "%s, %lld, %lld, %.4f, %.2f\n", LABEL, e - s, values[ 0 ], mflops, cpe );
 
   PRINT(
     printf( "PAPI_L2_DCM = %lld\n", values[ 0 ] );
@@ -77,7 +77,7 @@ void avaliacao( char *LABEL, int size ) {
     printf( "CPE: %.2f\n", cpe );
 
     printf( "Wallclock time: %lld us\n", e - s );
-    // printf( "MFLOPS: %g\n", mflops );
+    printf( "MFLOPS: %g\n", mflops );
     printf( "Fim\n" );
     );
 }

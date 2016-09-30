@@ -88,4 +88,5 @@ int main( int argc, char **argv ) {
    * printf( "--------------------------------------------------\n" );
    * printf( "Residual sum = %6.2lf\n", SUMres );
    */
+   volatile double result = y_intercept;
 }

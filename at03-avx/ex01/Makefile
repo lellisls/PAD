@@ -1,60 +1,69 @@
 all: tests
 
-CFLAGS=-Iinc obj/* -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize -fopt-info-vec-all
-GREP=2>&1 | grep -e "LOOP VECTORIZED" -e "error" || true
+debug ?= 0
+quiet ?= 0
+info-vec-all ?= 0
+gprof ?= 0
+
+
+CFLAGS=-Iinc -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize
+GREP=
+
+ifneq ($(info-vec-all), 0)
+	CFLAGS+= -fopt-info-vec-all
+	GREP=2>&1 | grep -e "LOOP VECTORIZED" -e "error" || true
+endif
+
+ifneq ($(quiet), 0)
+	CFLAGS+= -DQUIET
+endif
 
 stats: clean
-	gcc -c src/$@.c -Iinc -o obj/$@.o -lpapi -O3
+	gcc -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS) $(GREP)
 
 exercicio_a: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_a_avx: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_b: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_b_mod: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_b_avx: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_c: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_c_mod: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_c_avx: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_d: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_d_avx: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_e: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_e_avx: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicio_f: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
-
-exercicio_f_mod: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
-
-exercicio_f_avx: stats
-	gcc src/$@.c -o bin/$@ $(CFLAGS) $(GREP)
+	gcc src/$@.c -o bin/$@ obj/* $(CFLAGS) $(GREP)
 
 exercicios: exercicios_normal exercicios_mod exercicios_avx
 exercicios_normal: exercicio_a exercicio_b exercicio_c exercicio_d exercicio_e exercicio_f
 exercicios_mod: exercicio_b_mod exercicio_c_mod
-exercicios_avx: exercicio_a_avx exercicio_b_avx exercicio_c_avx exercicio_d_avx exercicio_e_avx exercicio_f_avx
+exercicios_avx: exercicio_a_avx exercicio_b_avx exercicio_c_avx exercicio_d_avx exercicio_e_avx
 
 tests: test_a test_b test_c test_d test_e test_f
 
@@ -80,9 +89,8 @@ test_e: exercicio_e exercicio_e_avx
 	bin/exercicio_e
 	bin/exercicio_e_avx
 
-test_f: exercicio_f exercicio_f_avx
+test_f: exercicio_f
 	bin/exercicio_f
-	bin/exercicio_f_avx
 
 clean:
 	rm -rf bin/* obj/*
