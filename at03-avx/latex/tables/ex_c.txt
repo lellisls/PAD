@@ -1,4 +1,0 @@
-Exemplo, Time, L2_DCM, MFLOPS, CPE
-Exercicio C - Padrão, 105713, 6373605, 1116.5664, 7.11
-Exercicio C - Modificado, 105877, 8514220, 1169.0563, 7.09
-Exercicio C - AVX, 104160, 8443770, 3211.2259, 7.00

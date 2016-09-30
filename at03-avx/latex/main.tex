@@ -3,6 +3,40 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{cite}
+\ifCLASSINFOpdf
+  \usepackage[pdftex]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../pdf/}{../jpeg/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+\else
+  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
+  % will default to the driver specified in the system graphics.cfg if no
+  % driver is specified.
+  \usepackage[dvips]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../eps/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.eps}
+\fi
+\usepackage[cmex10]{amsmath}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{mdwmath}
+\usepackage{mdwtab}
+%\usepackage{eqparbox}
+\usepackage[tight,footnotesize]{subfigure}
+%\usepackage[caption=false]{caption}
+\usepackage[font=footnotesize]{subfig}
+%\usepackage{stfloats}
+\usepackage{url}
+\usepackage{csvsimple,longtable,booktabs}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
 \usepackage{listings}
 
 \lstset{language=C++,
@@ -21,7 +55,7 @@
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
   % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
-\else
+  \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
   % driver is specified.
@@ -132,7 +166,7 @@ Assim, foi feita uma segunda versão, agora vetorizada por funções instrínsec
 \end{lstlisting}
 
 A corretude do algoritmo é facilmente observável pelas operações aritméticas realizadas, e também pelos resultados obtidos ao final da execução dos dois programas.
-Em um teste padronizado, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos o seguinte resultado nas dez ultimas posições do vetor $a$:
+Em um teste padronizado, em que os vetores são inicializados com os mesmos valores pseudo-aleatórios, temos o seguinte resultado nas dez ultimas posições do vetor $a$: \cite{wiki:BLAS}
 
 \begin{table}[htb!]
 \centering
@@ -149,30 +183,29 @@ A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.01}
 	\centering
 	\caption{Multiplicação de matrizes trivial comutando hierarquia de laços.}
 	\label{tab:exp1.01}
-	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex01.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex-a.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
 	\end{tabular}
 \end{table}
 
-\begin{figure}[htb!]
-\centering
-\caption{Comparação do tempo de execução entre as diferentes hierarquias.}
-\begin{tikzpicture}
-\begin{axis}[xlabel={Tamanho}, ylabel={Tempo ($\mu{s}$)}, legend pos=north west]
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
-\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
-\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
-\end{axis}
-\end{tikzpicture}
-\label{fig:exp01-time}
-\end{figure}
+% \begin{figure}[htb!]
+% \centering
+% \caption{Comparação do tempo de execução entre as diferentes hierarquias.}
+% \begin{tikzpicture}
+% \begin{axis}[xlabel={Tamanho}, ylabel={Tempo ($\mu{s}$)}, legend pos=north west]
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
+% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
+% \legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
+% \end{axis}
+% \end{tikzpicture}
+% \label{fig:exp01-time}
+% \end{figure}
 
 
 % \begin{figure}[htb!]
@@ -192,201 +225,16 @@ A comparação do desempenho se dá então pela Tabela \ref{tab:exp1.01}
 % 	\label{fig:exp01-l2dcm}
 % \end{figure}
 
-\section{Experimento 2 - Multiplicação com Blocagem}
-Nesse experimento foi implementado o algoritmo para multiplicação de matrizes com blocagem, para verificar a diferença no desempenho causada pela mudança do tamanho do bloco para 2, 4, 16 e 64.
-A implementação foi feita com base na hierarquia de laços IKJ, que obteve os melhores resultados em matrizes maiores.
-
-Na tabela \ref{tab:exp02} também percebe-se uma forte relação entre os melhores tempos e o número de cache misses. Neste caso, o bloco de tamanho 64x64 se mostrou o mais eficiente em todos os casos, embora se equipare com o segundo colocado, que é o bloco de tamanho 16x16.
-
-Percebe-se nesse experimento que o tempo de execução não foi diretamente influenciado pelo número de cache misses da memória cache L2, e que esses resultados não estão sujeitos à possivel vetorização de operações.
-Com uma análise extendida seria possível identificar outros fatores, como a variação no número de cache misses da memória cache L3.
-
-
-\begin{table}[htb!]
-	\centering
-	\caption{Multiplicação de matrizes IKJ com blocagem, variando tamanho dos blocos. }
-	\label{tab:exp02}
-	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Block & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex02.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-
-	\end{tabular}
-\end{table}
-
 %
-
-\begin{figure}[htb!]
-	\centering
-	\caption{Comparação do tempo de execução entre os diferentes tamanhos de blocos.}
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo ($\mu{s}$)}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 2};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-time.txt' index 3};
-	\legend{$2$, $4$, $16$, $64$ }
-	\end{axis}
-	\end{tikzpicture}
-	\label{fig:exp02-time}
-\end{figure}
-
+% \section{Conclusão}
+% Os experimentos realizados demonstraram a vantagem computacional obtida por meio da utilização de técnicas que favorecem a afinidade de memória, adequando-se a hierarquia dos laços, e também o impacto causado por diferentes estruturas de dados, de forma que se faça o uso mais eficiente do processador, evitando que este permaneça ocioso.
 %
-% \begin{figure}[htb!]
-% 	\centering
-% 	\begin{tikzpicture}
-% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 0};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 1};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 2};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02-l2dcm.txt' index 3};
-% 	\legend{$2$, $4$, $16$, $64$ }
-% 	\end{axis}
-% 	\end{tikzpicture}
-% 	\caption{Comparação de cache-misses em memória cache L2 entre os diferentes tamanhos de blocos.}
-% 	\label{fig:exp02-l2dcm}
-% \end{figure}
-
-
-\section{Experimento 3 - Multiplicação de Strassen}
-Nesse experimento foi implementado o algoritmo de Strassen, de forma que a matriz é particionada e realocada em matrizes menores utilizando uma técnica de divisão e conquista. Nessa implementação específica o algoritmo possui uma particularidade, pois quando se obtém uma matriz suficientemente pequena, é realizada uma multiplicação trivial IKJ\cite{PartIITh6:online}.
-
-Neste experimento, variamos o tamanho da matriz do caso base, que corresponde à segunda coluna da Tabela \ref{tab:exp03}. Percebemos então um empate técnico entre a matriz de tamanho 32x32 e a de tamanho 64x64. Dessa vez, não necessariamente os melhores resultados foram os com o menor número de cache misses, uma vez que cada chamada recursiva requer alocação dinâmica de matrizes, que pode provocar tais variações nos resultados.
-
-\begin{table}[htb!]
-	\centering
-	\caption{Multiplicação de Matrizes de Strassen, variando tamanho da matriz do caso base.}
-	\label{tab:exp03}
-	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Block & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex03.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-
-	\end{tabular}
-\end{table}
-
+% Porém, isso não é o suficiente para se obter um desempenho ótimo do algoritmo, uma vez que os resultados variam de acordo com a complexidade dos problemas, e uma vez que desconhecemos todos os recursos adicionais presentes na arquitetura do processador, que o BLAS certamente faz uso. Isso também evidencia a superioridade e a importância da utilização de bibliotecas otimizadas de operações de álgebra linear na computação científica.
 %
-
-\begin{figure}[htb!]
-	\centering
-	\caption{Comparação do tempo de execução entre os diferentes tamanhos minimos.}
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo ($\mu{s}$)}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-time.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-time.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-time.txt' index 2};
-	\legend{$16$, $32$ , $64$ }
-	\end{axis}
-	\end{tikzpicture}
-	\label{fig:exp03-time}
-\end{figure}
-
 %
-% \begin{figure}[htb!]
-% 	\centering
-% 	\begin{tikzpicture}
-% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-l2dcm.txt' index 0};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-l2dcm.txt' index 1};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03-l2dcm.txt' index 2};
-% 	\legend{$16$, $32$ , $64$ }
-% 	\end{axis}
-% 	\end{tikzpicture}
-% 	\caption{Comparação de cache-misses em memória cache L2 entre os diferentes tamanhos minimos.}
-% 	\label{fig:exp03-l2dcm}
-% \end{figure}
-
-
-\section{Experimento 4 - BLAS}
-Nesse experimento foi utilizada a função cblas\_dgemm do BLAS para realizar a multiplicação de duas matrizes, e obtemos assim os resultados da Tabela \ref{tab:exp04}.
-
-\begin{table}[htb!]
-	\centering
-	\caption{Multiplicação de matrizes da biblioteca BLAS}
-	\label{tab:exp04}
-	\begin{tabular}{llrrr}%
-		\bfseries Size & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex04.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
-
-	\end{tabular}
-\end{table}
-
-Comparando os melhores resultados dos 4 experimentos (considerando os testes com matrizes de tamanho 1024x1024), fazemos então a comparação da Tabela \ref{tab:exp04b}, onde percebemos a clara superioridade do BLAS/ATLAS sobre todas as outras tentativas, tal fato fica ainda mais evidente na Figura \ref{fig:compexperimentos}.
-
-Essa diferença de desempenho era esperada, uma vez que a BLAS é implementada com um alto nível de otimização, que além da afinidade de cache, utiliza recursos do processador como registradores vetoriais ou instruções SIMD\cite{wiki:BLAS}.
-
-\begin{table}[htb!]
-	\centering
-	\caption{Comparação dos melhores resultados em multiplicação de matrizes de tamanho 1024x1024}
-	\label{tab:exp04b}
-	\begin{tabular}{llrrr}%
-		\bfseries Algorithm & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex04-b.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
-	\end{tabular}
-\end{table}
-
-
-\begin{figure}[htb!]
-	\centering
-	\caption{Comparação entre os melhores resultados dos quatro experimentos com relação ao tempo.}
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Tamanho}, ylabel={Tempo ($\mu{s}$)}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 2};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/compexperimentos-time.txt' index 3};
-	\legend{$Trivial-IKJ$, $Blocking-64 $ , $Strassen-32$, $BLAS$ }
-	\end{axis}
-	\end{tikzpicture}
-	\label{fig:compexperimentos}
-\end{figure}
-
-
-\section{Experimento 5 - Fusão de Laços}
-Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços, realizando operações sobre dados de um vetor de 1000000 de elementos. Na Tabela \ref{tab:exp05}, a primeira linha representa o algoritmo sem fusão de laços, e a segunda, o algoritmo com fusão de laços.
-
-Percebe-se então que o resultado permanece muito semelhante, e apesar de apresentar um maior número de cache misses, a operação sem fusão de laços apresentou-se ligeiramente mais eficiente.
-
-\begin{table}[htb!]
-	\centering
-	\caption{Técnica de fusão de laços.}
-	\label{tab:exp05}
-	\begin{tabular}{llrrrr}%
-		\bfseries Size & \bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex05.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-
-	\end{tabular}
-\end{table}
-
-
-\section{Experimento 6 - Estruturas de dados}
-Nesse experimento foi feita a comparação do desempenho da técnica de fusão de laços trabalhando com diferentes estruturas de dados. Na tabela \ref{tab:exp06}, a primeira linha representa o formato \textbf{double abc[ ? ][3]}, a segunda linha o formato \textbf{double abc[3][ ? ]}, e a terceira um array do tipo de dados \textbf{struct \{double a, b, c; \} est\_abc }. Nesse experimento percebemos que embora possua o menor número de cache misses, o terceiro modo não é o mais rápido, perdendo por pouco do primeiro modo, muito embora ambos sejam virtualmente equivalentes, pois em ambos os casos, os valores a, b e c estão contíguos na memória.
-
-\begin{table}[htb!]
-	\centering
-	\caption{Desempenho obtido no exp 5}
-	\label{tab:exp06}
-	\begin{tabular}{cccccc}%
-		\bfseries Size & \bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPI
-		\csvreader[]{tables/ex06.csv}{}
-		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-
-	\end{tabular}
-\end{table}
-
-
-\section{Conclusão}
-Os experimentos realizados demonstraram a vantagem computacional obtida por meio da utilização de técnicas que favorecem a afinidade de memória, adequando-se a hierarquia dos laços, e também o impacto causado por diferentes estruturas de dados, de forma que se faça o uso mais eficiente do processador, evitando que este permaneça ocioso.
-
-Porém, isso não é o suficiente para se obter um desempenho ótimo do algoritmo, uma vez que os resultados variam de acordo com a complexidade dos problemas, e uma vez que desconhecemos todos os recursos adicionais presentes na arquitetura do processador, que o BLAS certamente faz uso. Isso também evidencia a superioridade e a importância da utilização de bibliotecas otimizadas de operações de álgebra linear na computação científica.
-
-
-Também notamos que a utilização de fusão de laços não necessariamente trará benefícios relevantes, pois o desempenho depende da natureza dos dados e também das operações realizadas à cada iteração. Já a utilização de diferentes estruturas de dados poderia apresentar diferenças mais expressivas em casos mais complexos, uma vez que não notamos uma diferença relevante nos experimentos simples realizados.
-
-Finalmente, a utilização das flags de otimização pode prejudicar a avaliação da diferença real do desempenho causada por cache misses, uma vez que recursos do processador, como as operações vetoriais, possam ser ativados automaticamente.
+% Também notamos que a utilização de fusão de laços não necessariamente trará benefícios relevantes, pois o desempenho depende da natureza dos dados e também das operações realizadas à cada iteração. Já a utilização de diferentes estruturas de dados poderia apresentar diferenças mais expressivas em casos mais complexos, uma vez que não notamos uma diferença relevante nos experimentos simples realizados.
+%
+% Finalmente, a utilização das flags de otimização pode prejudicar a avaliação da diferença real do desempenho causada por cache misses, uma vez que recursos do processador, como as operações vetoriais, possam ser ativados automaticamente.
 
 % \section{Experimento XXXX}
 % Nesse experimento foi utilizada a função ..... do BLAS
@@ -437,7 +285,5 @@ Finalmente, a utilização das flags de otimização pode prejudicar a avaliaç�
 
 
 \bibliographystyle{IEEEtran}
-
-\bibliography{references}
-
+\bibliography{IEEEabrv,references}
 \end{document}

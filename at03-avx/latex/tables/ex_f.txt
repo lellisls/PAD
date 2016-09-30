@@ -1,2 +1,0 @@
-Exemplo, Time, L2_DCM, MFLOPS, CPE
-Exercicio F - Padrão, 66773, 3593025, 753.7678, 4.48
