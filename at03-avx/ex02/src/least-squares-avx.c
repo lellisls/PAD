@@ -91,7 +91,7 @@ int main( int argc, char **argv ) {
   }
   slope = ( SUMx * SUMy - n * SUMxy ) / ( SUMx * SUMx - n * SUMxx );
   y_intercept = ( SUMy - slope * SUMx ) / n;
-  avaliacao( "Least Squares - Simples", n );
+  avaliacao( "Least Squares - AVX", n );
 
   PRINT( printf( "\n" ); );
   PRINT( printf( "The linear equation that best fits the given data:\n" ); );
@@ -99,7 +99,7 @@ int main( int argc, char **argv ) {
   PRINT( printf( "--------------------------------------------------\n" ); );
   PRINT( printf( "   Original (x,y)     Estimated y     Residual\n" ); );
   PRINT( printf( "--------------------------------------------------\n" ); );
-
+  volatile double result = y_intercept;
   /*
    * SUMres = 0;
    * for( i = 0; i < n; i++ ) {

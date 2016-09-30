@@ -2,7 +2,8 @@ ex_a=(exercicio_a exercicio_a_avx)
 ex_b=(exercicio_b exercicio_b_mod exercicio_b_avx)
 ex_c=(exercicio_c exercicio_c_mod exercicio_c_avx)
 ex_d=(exercicio_d exercicio_d_avx)
-
+ex_e=(exercicio_e exercicio_e_avx)
+ex_f=(exercicio_f)
 make stats exercicios quiet=1
 
 rm -rf results/ex_a.txt;

@@ -6,7 +6,7 @@ info-vec-all ?= 0
 gprof ?= 0
 
 
-CFLAGS=-Iinc -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize
+CFLAGS=-Iinc  -I/home-local/aluno/papi/include -L/home-local/aluno/papi/lib -lpapi -O3 -march=native -fopenmp -ffast-math -ftree-vectorize
 GREP=
 
 ifneq ($(info-vec-all), 0)
