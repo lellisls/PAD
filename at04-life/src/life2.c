@@ -59,15 +59,10 @@ void print( int *val, int n, int start, int end ) {
 
 int main( int argc, char const *argv[] ) {
   int n, steps, size;
-  if( argc < 2 ) {
-    n = 100;
-  }
-  else {
-    n = atoi( argv[ 1 ] ) + 2;
-  }
+  n = atoi( argv[ 1 ] );
   size = n * n;
   if( argc < 3 ) {
-    steps = 4 * ( n - 5 );
+    steps = 4 * ( n - 3 );
   }
   else {
     steps = atoi( argv[ 2 ] );
@@ -92,9 +87,9 @@ int main( int argc, char const *argv[] ) {
     evolve( data, aux, n );
     aux2 = data; data = aux; aux = aux2;
 
-    /* PRINT(print( data, n, 0, 12 );); */
+    // PRINT(print( data, n, 0, 12 ););
   }
-  avaliacao( "Modificado", size );
+  avaliacao( "Otimizado", size );
   PRINT( print( data, n, n - 12, n ); );
 
   return( 0 );

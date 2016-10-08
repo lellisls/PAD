@@ -25,6 +25,8 @@ ifneq ($(gprof), 0)
 	CFLAGS+= -pg
 endif
 
+all: life life2
+
 stats: clean
 	gcc -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS)
 

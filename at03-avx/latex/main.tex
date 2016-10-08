@@ -481,52 +481,80 @@ Diferente dos exercícios anteriores, este algoritmo possui uma dependência rea
 	\end{tabular}
 \end{table}
 
+\section{Experimento 2- Mínimos Quadrados}
+Nesse experimento foram feitos diversos testes envolvendo a vetorização do método dos mínimos quadrados. Normalmente calculado da seguinte forma:
 
-% \begin{figure}[htb!]
-% \centering
-% \caption{Comparação do tempo de execução entre as diferentes hierarquias.}
-% \begin{tikzpicture}
-% \begin{axis}[xlabel={Tamanho}, ylabel={Tempo ($\mu{s}$)}, legend pos=north west]
-% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 0};
-% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 1};
-% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 2};
-% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 3};
-% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 4};
-% \addplot gnuplot [raw gnuplot] {plot 'plots/ex01-time.txt' index 5};
-% \legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
-% \end{axis}
-% \end{tikzpicture}
-% \label{fig:exp01-time}
-% \end{figure}
+\begin{lstlisting}
+SUMx = 0; SUMy = 0; SUMxy = 0; SUMxx = 0;
+for( i = 0; i < n; i++ ) {
+  SUMx += x[ i ];
+  SUMy += y[ i ];
+  SUMxy += x[ i ] * y[ i ];
+  SUMxx += x[ i ] * x[ i ];
+}
+slope = ( SUMx * SUMy - n * SUMxy )
+        / ( SUMx * SUMx - n * SUMxx );
+y_intercept = ( SUMy - slope * SUMx ) / n;
+\end{lstlisting}
+
+Neste exemplo, a vetorização automática não foi realizada, mais uma vez, por existirem operações de redução. E assim, foi implementada uma versão vetorizada com funções intrínsecas:
+
+\begin{lstlisting}
+  for( i = 0; i < n - 4; i += 4 ) {
+    data_x = _mm256_load_pd( x + i );
+    acc_x = _mm256_add_pd( acc_x, data_x );
+    // SUMx += x[ i ];
+    data_y = _mm256_load_pd( y + i );
+    acc_y = _mm256_add_pd( acc_y, data_y );
+    // SUMy += y[ i ];
+    mult_xy = _mm256_mul_pd( data_x, data_y );
+    acc_xy = _mm256_add_pd( acc_xy, mult_xy );
+    // SUMxy += x[ i ] * y[ i ];
+    mult_xx = _mm256_mul_pd( data_x, data_x );
+    acc_xx = _mm256_add_pd( acc_xx, mult_xx );
+    // SUMxx += x[ i ] * x[ i ];
+  }
+  SUMx = 0; SUMy = 0; SUMxy = 0; SUMxx = 0;
+  for( ; i < n; i++ ) {
+    SUMx += x[ i ];
+    SUMy += y[ i ];
+    SUMxy += x[ i ] * y[ i ];
+    SUMxx += x[ i ] * x[ i ];
+  }
+  for( i = 0; i < 4; i++ ) {
+    SUMx += acc_x[ i ];
+    SUMy += acc_y[ i ];
+    SUMxy += acc_xy[ i ];
+    SUMxx += acc_xx[ i ];
+  }
+  slope = ( SUMx * SUMy - n * SUMxy )
+          / ( SUMx * SUMx - n * SUMxx );
+  y_intercept = ( SUMy - slope * SUMx ) / n;
+\end{lstlisting}
+
+Para um pequeno conjunto de dados, os resultados obtidos coincidiram com os resultados esperados, assim a dados como entrada os vetores $A = (2, 4, 6, 8)$, e $B = (2, 11, 28, 40)$, temos como resultado $y = 6.55x -12.50$. Em um teste com vetores pseudo-aleatorios de tamanho $100000000$, os resultados também coincidiram, sendo o valor de $ y = 2.50x -134.22 $.
+
+Finalmente, apresentamos na Tabela \ref{tab:exp2} a comparação do desempenho dos exemplos.
+
+\begin{table}[htb!]
+	\centering
+	\caption{Análise de desempenho do experimento 1 f}
+	\label{tab:exp2}
+	\begin{tabular}{lrrrr}%
+		\bfseries Mode & \bfseries Tempo($\mu{s}$)& \bfseries L2\_DCM & \bfseries MFLOPS & \bfseries CPE
+		\csvreader[]{tables/ex02.csv}{}
+		{\\\csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv}
+	\end{tabular}
+\end{table}
 
 
-% \begin{figure}[htb!]
-% 	\centering
-% 	\begin{tikzpicture}
-% 	\begin{axis}[xlabel={Tamanho}, ylabel={Cache misses}, legend pos=north west]
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 0};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 1};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 2};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 3};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 4};
-% 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01-l2dcm.txt' index 5};
-% 	\legend{$IJK$, $IKJ$, $JIK$, $JKI$, $KIJ$, $KJI$ }
-% 	\end{axis}
-% 	\end{tikzpicture}
-% 	\caption{Comparação de cache-misses em memória cache L2 entre as diferentes hierarquias.}
-% 	\label{fig:exp01-l2dcm}
-% \end{figure}
 
-%
-% \section{Conclusão}
-% Os experimentos realizados demonstraram a vantagem computacional obtida por meio da utilização de técnicas que favorecem a afinidade de memória, adequando-se a hierarquia dos laços, e também o impacto causado por diferentes estruturas de dados, de forma que se faça o uso mais eficiente do processador, evitando que este permaneça ocioso.
-%
-% Porém, isso não é o suficiente para se obter um desempenho ótimo do algoritmo, uma vez que os resultados variam de acordo com a complexidade dos problemas, e uma vez que desconhecemos todos os recursos adicionais presentes na arquitetura do processador, que o BLAS certamente faz uso. Isso também evidencia a superioridade e a importância da utilização de bibliotecas otimizadas de operações de álgebra linear na computação científica.
-%
-%
-% Também notamos que a utilização de fusão de laços não necessariamente trará benefícios relevantes, pois o desempenho depende da natureza dos dados e também das operações realizadas à cada iteração. Já a utilização de diferentes estruturas de dados poderia apresentar diferenças mais expressivas em casos mais complexos, uma vez que não notamos uma diferença relevante nos experimentos simples realizados.
-%
-% Finalmente, a utilização das flags de otimização pode prejudicar a avaliação da diferença real do desempenho causada por cache misses, uma vez que recursos do processador, como as operações vetoriais, possam ser ativados automaticamente.
+\section{Conclusão}
+Analisando os resultados obtidos em todos os testes, podemos chegar à algumas conclusões em comum. Percebe-se que em todos os casos, melhora do desempenho ocorreu com a vetorização, porém não de forma expressiva, ainda que em muitos casos os dados sejam do tipo float, quando ocorrem 8 operações em paralelo. Percebemos também que pequenas alterações no código podem favorecer a vetorização automática, oferecendo melhor porabilidade e manutenção do código, sem perda considerável de desempenho se comparado aos códigos que fazem uso de funções intrínsecas.
+
+Finalmente, a utilização de vetorização para operações de redução é viável e pode trazer uma melhora no desempenho, porém deve ser realizada com cuidado, pois provavelmente alterará os resultados obtidos de forma considerável, principalmente se habilitadas otimizações menos confiáveis como a flag 'fast-math' do gcc para realização de vetorização automática de operações de redução, sendo a utilização das funções intrínsecas uma opção mais confiável de vetorização.
+
+
 
 % \section{Experimento XXXX}
 % Nesse experimento foi utilizada a função ..... do BLAS
