@@ -1,0 +1,303 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\ifCLASSINFOpdf
+  \usepackage[pdftex]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../pdf/}{../jpeg/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+\else
+  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
+  % will default to the driver specified in the system graphics.cfg if no
+  % driver is specified.
+  \usepackage[dvips]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../eps/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.eps}
+\fi
+\usepackage[cmex10]{amsmath}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{mdwmath}
+\usepackage{mdwtab}
+%\usepackage{eqparbox}
+\usepackage[tight,footnotesize]{subfigure}
+%\usepackage[caption=false]{caption}
+\usepackage[font=footnotesize]{subfig}
+%\usepackage{stfloats}
+\usepackage{url}
+\usepackage{csvsimple,longtable,booktabs}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\hyphenation{op-tical net-works semi-conduc-tor}
+\usepackage{listings}
+
+\lstset{language=C++,
+	basicstyle=\ttfamily,
+	keywordstyle=\color{blue}\ttfamily,
+	stringstyle=\color{red}\ttfamily,
+	commentstyle=\color{green}\ttfamily,
+	morecomment=[l][\color{magenta}]{\#}
+}
+
+\begin{document}
+\title{Programação de Alto Desempenho\\
+\large Atividade 4 - Otimizações independentes de compilador ou maquina}
+
+\author{\IEEEauthorblockN{Lucas Santana Lellis - 69618}
+\IEEEauthorblockA{PPGCC - Instituto de Ciência e Tecnologia\\
+	Universidade Federal de São Paulo} }
+
+% make the title area
+\maketitle
+
+%\IEEEpeerreviewmaketitle
+
+\section{Introdução}
+Nesta atividade foram realizados experimentos relacionados com a otimização de código independente de compilador ou máquina, e também na utilização de recursos básicos do gprof.
+Cada experimento foi realizado 5 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles.
+
+Todos os programas foram feitos em C, com otimização -O3, utilizando a biblioteca PAPI para estimar o tempo total de processamento, e o número de operações por ciclo.
+
+
+As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab:cpu}.
+
+\begin{table}[htb!]
+\centering
+\caption{Especificações da Máquina}
+\label{tab:cpu}
+\begin{tabular}{lr}
+ CPU & Intel Core i5 - 3470\\
+ Cores & 4\\
+ Threads & 4\\
+ Clock & 3.2 GHz\\
+ Cache L3 & 6144 KB \\
+ Cache L2 & 256 KB * 4 \\
+ Hardware Counters & 11 \\
+ RAM & 8 Gb \\
+ SO & Fedora 23 \\
+ Kernel & 4.7.4 \\
+ GCC & 5.3.1\\
+
+\end{tabular}
+\end{table}
+
+\section{Experimento I - Otimização do código do Jogo da Vida }
+
+Neste experimento foi realizada a comparação da alteração de desempenho causada pela redução do número de multiplicações no endereçamento dos elementos da matriz utilizada para representar o jogo da vida.
+
+Assim, no primeiro programa, chamado de ``Padrão'', o cálculo de cada vizinho de uma coordenada $(i,j)$ envolve multiplicações e somas, como o código abaixo:
+
+\begin{lstlisting}
+up = val[(i-1)*n + j];
+upright = val[(i-1)*n + j+1];
+right = val[i*n + j+1];
+rightdown = val[(i+1)*n + j+1];
+down = val[(i+1)*n + j];
+downleft = val[(i+1)*n + j-1];
+left = val[i*n + j-1];
+leftup = val[(i-1)*n + j-1];
+\end{lstlisting}
+
+Enquanto o segundo programa, chamado de ``Otimizado'', o cálculo da posição atual é dado por $inj = i * n + j$, e os vizinhos são obtidos pelo deslocamento em função da soma e subtração de valores conhecidos:
+
+\begin{lstlisting}
+int inj = i*n + j;
+up = val[inj - n];
+upright = val[inj - n + 1];
+right = val[inj + 1];
+rightdown = val[inj + n + 1];
+down = val[inj + n];
+downleft = val[inj + n - 1];
+left = val[inj - 1];
+leftup = val[inj - n - 1];
+\end{lstlisting}
+
+Tendo como configuração inicial um tabuleiro de tamanho 10x10 com células vivas nas posições (1,2), (2,3), (3,1), (3,2), (3,3) e as demais células mortas. Nas Figuras de \ref{fig:life1-10-start} até \ref{fig:life1-10-end} a configuração do tabuleiro nas quatro primeiras iterações do algoritmo.
+\begin{figure}[!htb]
+\begin{verbatim}
++------------+
+|            |
+|  0         |
+|   0        |
+| 000        |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
++------------+
+\end{verbatim}
+\caption{Condições iniciais do teste em tabuleiro 10x10.}
+\label{fig:life1-10-start}
+\end{figure}
+
+\begin{figure}[!htb]
+	\begin{verbatim}
++------------+
+|            |
+|            |
+| 0 0        |
+|  00        |
+|  0         |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
++------------+
+	\end{verbatim}
+	\caption{Condições do tabuleiro 10x10 após 1a iteração.}
+\end{figure}
+\begin{figure}[!htb]
+	\begin{verbatim}
++------------+
+|            |
+|            |
+|   0        |
+| 0 0        |
+|  00        |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
++------------+
+	\end{verbatim}
+	\caption{Condições do tabuleiro 10x10 após 2a iteração.}
+\end{figure}
+\begin{figure}[!htb]
+	\begin{verbatim}
++------------+
+|            |
+|            |
+|  0         |
+|   00       |
+|  00        |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
++------------+
+	\end{verbatim}
+	\caption{Condições do tabuleiro 10x10 após 3a iteração.}
+\end{figure}
+\begin{figure}[!htb]
+	\begin{verbatim}
++------------+
+|            |
+|            |
+|   0        |
+|    0       |
+|  000       |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
++------------+
+	\end{verbatim}
+	\caption{Condições do tabuleiro 10x10 após 4a iteração.}
+	\label{fig:life1-10-end}
+\end{figure}
+
+Foram realizados também testes em tabuleiros de tamanho 1000x1000, de forma que na Figura \ref{fig:life1-1000-start} temos as 10 primeiras linhas e colunas da configuração inicial do tabuleiro e na Figura \ref{fig:life1-10-end}, as 10 últimas linhas e colunas da geração final do tabuleiro após $4(N-5)$ iterações do algoritmo.
+
+\begin{figure}[!htb]
+	\begin{verbatim}
++------------+
+|            |
+|  0         |
+|   0        |
+| 000        |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
++------------+
+	\end{verbatim}
+	\caption{Condições iniciais do tabuleiro 10x10.}
+	\label{fig:life1-1000-start}
+\end{figure}
+
+
+\begin{figure}[!htb]
+	\begin{verbatim}
++------------+
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|         0  |
+|          0 |
+|        000 |
+|            |
++------------+
+
+	\end{verbatim}
+	\caption{Condições do tabuleiro 1000x1000 após 4(N-5) iterações.}
+	\label{fig:life1-1000-end}
+\end{figure}
+
+Finalmente, na Tabela \ref{tab:exp01} temos a avaliação do desempenho do algoritmo Original e Modificado, após $4(N-3)$ iterações, e percebemos o tempo de execução foi ligeiramente maior, assim como o número de ciclos por elemento, porém, percebe-se que esse tipo de otimização não surte grande efeito, já que a variação foi menor do que um décimo de segundo.
+
+\begin{table}[htb!]
+	\centering
+	\begin{tabular}{lrr}%
+		\bfseries Mode & \bfseries Tempo(s)& \bfseries CPE
+		\csvreader[]{tables/ex01.csv}{}
+		{\\ \csvcoli & \csvcolii & \csvcoliii}
+
+	\end{tabular}
+	\caption{\label{tab:exp01}Avaliação do desempenho do algoritmo Original e Modificado.}
+\end{table}
+
+
+\section{Experimento II - GPROF }
+
+O segundo experimento consiste na simples utilização do gprof para verificar os tempos de execução por rotina do algoritmo original. Como só há uma função, a função ``evolve'' tem 100\% do tempo de execução, como visto na Figura \ref{fig:ex02}:
+
+\begin{figure}[!htb]
+	\begin{verbatim}
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+%   cumulative   self              self     total           
+time   seconds   seconds    calls  Ts/call  Ts/call  name    
+100.54      7.52     7.52                             evolve
+
+	\end{verbatim}
+	\caption{\label{fig:ex02} Saída do profiler gprof, após a execução do algoritmo original do jogo da vida.}
+\end{figure}
+
+\bibliographystyle{IEEEtran}
+
+%\bibliography{references}
+
+\end{document}
