@@ -21,6 +21,10 @@
   % every instance of \includegraphics
   % \DeclareGraphicsExtensions{.eps}
 \fi
+
+\usepackage{adjustbox}
+\usepackage{fancyvrb}
+
 \usepackage[cmex10]{amsmath}
 \usepackage{algorithmic}
 \usepackage{array}
@@ -36,19 +40,19 @@
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
 \hyphenation{op-tical net-works semi-conduc-tor}
-\usepackage{listings}
+%\usepackage{listings}
 
-\lstset{language=C++,
-	basicstyle=\ttfamily,
-	keywordstyle=\color{blue}\ttfamily,
-	stringstyle=\color{red}\ttfamily,
-	commentstyle=\color{green}\ttfamily,
-	morecomment=[l][\color{magenta}]{\#}
-}
+%\lstset{language=C++,
+%	basicstyle=\ttfamily,
+%	keywordstyle=\color{blue}\ttfamily,
+%	stringstyle=\color{red}\ttfamily,
+%	commentstyle=\color{green}\ttfamily,
+%	morecomment=[l][\color{magenta}]{\#}
+%}
 
 \begin{document}
 \title{Programação de Alto Desempenho\\
-\large Atividade 4 - Otimizações independentes de compilador ou maquina}
+\large Atividade 5 - Programação Paralela em Sistemas de Mem. Compartilhada}
 
 \author{\IEEEauthorblockN{Lucas Santana Lellis - 69618}
 \IEEEauthorblockA{PPGCC - Instituto de Ciência e Tecnologia\\
@@ -60,10 +64,10 @@
 %\IEEEpeerreviewmaketitle
 
 \section{Introdução}
-Nesta atividade foram realizados experimentos relacionados com a otimização de código independente de compilador ou máquina, e também na utilização de recursos básicos do gprof.
-Cada experimento foi realizado 5 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles.
+Nesta atividade foram realizados experimentos relacionados com a implementação de técnicas de programação paralela em sistemas de memória compartilhada utilizando OpenMP.
+Cada experimento foi realizado 5 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles, sendo calculado o speedup pela fórmula $$speedup(P) = {{\textrm{Tempo para 1 thread} }\over{\textrm{Tempo para P threads} }}$$ e a eficiência pela fórmula $$eficiencia(P) = {{speedup(P)}\over{P}}$$
 
-Todos os programas foram feitos em C, com otimização -O3, utilizando a biblioteca PAPI para estimar o tempo total de processamento, e o número de operações por ciclo.
+Todos os programas foram feitos em C, com otimização -O3, utilizando a biblioteca PAPI para estimar o tempo total de processamento, e o número de cache misses.
 
 
 As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab:cpu}.
@@ -88,213 +92,117 @@ As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab
 \end{tabular}
 \end{table}
 
-\section{Experimento I - Otimização do código do Jogo da Vida }
+\section{Experimento I - Multiplicação de Matrizes}
 
-Neste experimento foi realizada a comparação da alteração de desempenho causada pela redução do número de multiplicações no endereçamento dos elementos da matriz utilizada para representar o jogo da vida.
 
-Assim, no primeiro programa, chamado de ``Padrão'', o cálculo de cada vizinho de uma coordenada $(i,j)$ envolve multiplicações e somas, como o código abaixo:
+Neste experimento foi feita a implementação da multiplicação de matrizes com vetorização e blocagem para utilização efetiva de cache, utilizando OpenMP. 
 
-\begin{lstlisting}
-up = val[(i-1)*n + j];
-upright = val[(i-1)*n + j+1];
-right = val[i*n + j+1];
-rightdown = val[(i+1)*n + j+1];
-down = val[(i+1)*n + j];
-downleft = val[(i+1)*n + j-1];
-left = val[i*n + j-1];
-leftup = val[(i-1)*n + j-1];
-\end{lstlisting}
+\subsection{Avaliando resultado da multiplicação}
+Utilizando o software R, foi possível conferir que a multiplicação das matrizes de tamanho 8x8 e com blocagem de tamanhos 2x2, 4x4 e 8x8, foi realizada com sucesso para até 4 threads.
 
-Enquanto o segundo programa, chamado de ``Otimizado'', o cálculo da posição atual é dado por $inj = i * n + j$, e os vizinhos são obtidos pelo deslocamento em função da soma e subtração de valores conhecidos:
+Nas Figuras \ref{fig:matA} e \ref{fig:matB} estão as matrizes de entrada, foi feita a multiplicação dessas matrizes em um outro software confiável (R), e o resultado está na Figura \ref{fig:matC-R}, enfim, para todos os testes executados, obtivemos a mesma saída, representada na Figura \ref{fig:matC}.f Assim, comparando os resultados é fácil observar que a multiplicação está sendo feita corretamente.
 
-\begin{lstlisting}
-int inj = i*n + j;
-up = val[inj - n];
-upright = val[inj - n + 1];
-right = val[inj + 1];
-rightdown = val[inj + n + 1];
-down = val[inj + n];
-downleft = val[inj + n - 1];
-left = val[inj - 1];
-leftup = val[inj - n - 1];
-\end{lstlisting}
-
-Tendo como configuração inicial um tabuleiro de tamanho 10x10 com células vivas nas posições (1,2), (2,3), (3,1), (3,2), (3,3) e as demais células mortas. Nas Figuras de \ref{fig:life1-10-start} até \ref{fig:life1-10-end} a configuração do tabuleiro nas quatro primeiras iterações do algoritmo.
-\begin{figure}[!htb]
-\begin{verbatim}
-+------------+
-|            |
-|  0         |
-|   0        |
-| 000        |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-+------------+
-\end{verbatim}
-\caption{Condições iniciais do teste em tabuleiro 10x10.}
-\label{fig:life1-10-start}
-\end{figure}
-
-\begin{figure}[!htb]
-	\begin{verbatim}
-+------------+
-|            |
-|            |
-| 0 0        |
-|  00        |
-|  0         |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-+------------+
-	\end{verbatim}
-	\caption{Condições do tabuleiro 10x10 após 1a iteração.}
-\end{figure}
-\begin{figure}[!htb]
-	\begin{verbatim}
-+------------+
-|            |
-|            |
-|   0        |
-| 0 0        |
-|  00        |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-+------------+
-	\end{verbatim}
-	\caption{Condições do tabuleiro 10x10 após 2a iteração.}
-\end{figure}
-\begin{figure}[!htb]
-	\begin{verbatim}
-+------------+
-|            |
-|            |
-|  0         |
-|   00       |
-|  00        |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-+------------+
-	\end{verbatim}
-	\caption{Condições do tabuleiro 10x10 após 3a iteração.}
-\end{figure}
-\begin{figure}[!htb]
-	\begin{verbatim}
-+------------+
-|            |
-|            |
-|   0        |
-|    0       |
-|  000       |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-+------------+
-	\end{verbatim}
-	\caption{Condições do tabuleiro 10x10 após 4a iteração.}
-	\label{fig:life1-10-end}
-\end{figure}
-
-Foram realizados também testes em tabuleiros de tamanho 1000x1000, de forma que na Figura \ref{fig:life1-1000-start} temos as 10 primeiras linhas e colunas da configuração inicial do tabuleiro e na Figura \ref{fig:life1-10-end}, as 10 últimas linhas e colunas da geração final do tabuleiro após $4(N-5)$ iterações do algoritmo.
-
-\begin{figure}[!htb]
-	\begin{verbatim}
-+------------+
-|            |
-|  0         |
-|   0        |
-| 000        |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-+------------+
-	\end{verbatim}
-	\caption{Condições iniciais do tabuleiro 10x10.}
-	\label{fig:life1-1000-start}
+\begin{figure}[htb!]
+\begin{adjustbox}{max width=\linewidth}
+	\begin{BVerbatim}
+77.26 54.95 97.36 30.08 77.49 52.89 61.91 09.30 
+93.01 98.07 26.35 34.81 01.79 02.58 16.81 02.21 
+55.81 06.73 33.68 29.09 51.98 84.37 58.02 92.30 
+39.49 46.66 96.38 25.62 37.06 43.71 30.64 11.47 
+30.14 03.15 18.54 38.51 77.74 11.46 43.59 77.36 
+94.13 75.96 32.54 15.72 29.80 50.51 68.89 10.42 
+07.24 26.37 09.34 86.87 51.28 13.41 02.09 41.48 
+78.32 77.30 82.55 07.50 15.98 99.84 47.04 10.94 
+	\end{BVerbatim}
+\end{adjustbox}
+\caption{Matriz de entrada A.\label{fig:matA}}
 \end{figure}
 
 
-\begin{figure}[!htb]
-	\begin{verbatim}
-+------------+
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|         0  |
-|          0 |
-|        000 |
-|            |
-+------------+
-
-	\end{verbatim}
-	\caption{Condições do tabuleiro 1000x1000 após 4(N-5) iterações.}
-	\label{fig:life1-1000-end}
+\begin{figure}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\begin{BVerbatim}
+53.38 49.13 12.99 75.91 51.64 73.20 12.52 14.88 
+18.77 32.11 42.48 32.74 92.06 82.02 02.43 94.08 
+20.69 53.17 36.81 11.17 45.50 13.89 57.19 14.55 
+90.37 29.36 44.99 61.69 28.21 17.39 45.93 86.46 
+81.73 63.82 32.24 34.04 22.88 99.28 03.76 83.08 
+24.02 54.03 01.59 33.12 59.44 23.96 25.51 99.03 
+13.58 89.30 64.88 50.61 98.33 94.87 90.77 59.74 
+80.96 10.86 93.02 75.87 58.01 48.39 10.26 54.28 
+		\end{BVerbatim}
+	\end{adjustbox}
+	\caption{Matriz de entrada B.\label{fig:matB}}
 \end{figure}
 
-Finalmente, na Tabela \ref{tab:exp01} temos a avaliação do desempenho do algoritmo Original e Modificado, após $4(N-3)$ iterações, e percebemos o tempo de execução foi ligeiramente maior, assim como o número de ciclos por elemento, porém, percebe-se que esse tipo de otimização não surte grande efeito, já que a variação foi menor do que um décimo de segundo.
-
-\begin{table}[htb!]
-	\centering
-	\begin{tabular}{lrr}%
-		\bfseries Mode & \bfseries Tempo(s)& \bfseries CPE
-		\csvreader[]{tables/ex01.csv}{}
-		{\\ \csvcoli & \csvcolii & \csvcoliii}
-
-	\end{tabular}
-	\caption{\label{tab:exp01}Avaliação do desempenho do algoritmo Original e Modificado.}
-\end{table}
-
-
-\section{Experimento II - GPROF }
-
-O segundo experimento consiste na simples utilização do gprof para verificar os tempos de execução por rotina do algoritmo original. Como só há uma função, a função ``evolve'' tem 100\% do tempo de execução, como visto na Figura \ref{fig:ex02}:
-
-\begin{figure}[!htb]
-	\begin{verbatim}
-Flat profile:
-
-Each sample counts as 0.01 seconds.
-%   cumulative   self              self     total           
-time   seconds   seconds    calls  Ts/call  Ts/call  name    
-100.54      7.52     7.52                             evolve
-
-	\end{verbatim}
-	\caption{\label{fig:ex02} Saída do profiler gprof, após a execução do algoritmo original do jogo da vida.}
+\begin{figure}[htb!]
+\begin{adjustbox}{max width=\linewidth}
+\begin{BVerbatim}
+> mat <- scan('tests/matA.txt')
+Read 64 items
+> matA <- matrix(mat, ncol=8, byrow=TRUE)
+> mat <- scan('tests/matB.txt')
+Read 64 items
+> matB <- matrix(mat, ncol=8, byrow=TRUE)
+> matA %*% matB
+[,1]      [,2]      [,3]     [,4]     [,5]     [,6]      [,7]     [,8]
+[1,] 19085.60 25052.627 15739.183 18835.35 25870.69 27321.73 15405.991 26215.50
+[2,] 11112.08 11920.428  9268.277 13877.77 17987.71 17764.61  6129.639 15531.88
+[3,] 20966.57 19662.331 17719.448 21130.57 23118.34 22763.81 12538.554 25618.59
+[4,] 12716.70 16902.660 11514.659 12312.51 18567.07 16690.43 11449.760 18455.39
+[5,] 19015.72 14011.617 15489.058 16075.05 15010.09 19263.26  8549.099 18740.86
+[6,] 13972.23 20151.302 12834.484 17929.95 24840.34 25054.49 11706.685 22538.45
+[7,] 16824.95  8883.894 11134.989 12318.85 10259.21 11951.11  5829.013 18200.02
+[8,] 13246.08 21673.026 12420.705 16922.20 26688.47 22320.94 13222.982 24906.10
+\end{BVerbatim}
+\end{adjustbox}
+\caption{Matriz de saída C - obtida no R. \label{fig:matC-R}}
 \end{figure}
+
+\begin{figure}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\begin{BVerbatim}
+19085.60 25052.62 15739.18 18835.35 25870.69 27321.73 15405.99 26215.50 
+11112.08 11920.43 09268.28 13877.76 17987.71 17764.61 06129.64 15531.88 
+20966.57 19662.33 17719.45 21130.57 23118.35 22763.81 12538.55 25618.59 
+12716.70 16902.66 11514.66 12312.51 18567.07 16690.43 11449.76 18455.39 
+19015.71 14011.62 15489.06 16075.05 15010.09 19263.26 08549.10 18740.86 
+13972.23 20151.30 12834.48 17929.95 24840.34 25054.49 11706.68 22538.45 
+16824.95 08883.89 11134.99 12318.85 10259.21 11951.11 05829.01 18200.02 
+13246.08 21673.03 12420.70 16922.20 26688.47 22320.95 13222.98 24906.10 
+		\end{BVerbatim}
+	\end{adjustbox}
+	\caption{Matriz de saída C - obtida em todos os testes. \label{fig:matC}}
+\end{figure}
+\subsection{Comparando speedup e eficiência}
+Na Tabela \ref{tab:ex01} estão disponíveis os resultados dos testes.
+\section{Experimento II - Odd-Even Sort}
+Nesse experimento foi feita a paralelização do algoritmo Odd-Even Sort, realizando a ordenação de valores pseudo aleatórios com 1, 2 e 4 threads obteve-se os mesmos resultados, como visto na Figura \ref{fig:ex02}.
+\begin{figure}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\begin{BVerbatim}
+Entrada: 6 8 5 3 6 9 8 1 9 4 
+1 Thread : 
+2 Threads: 
+4 Threads: 
+		\end{BVerbatim}
+	\end{adjustbox}
+	\caption{Resultados dos testes.\label{fig:ex02}}
+\end{figure}
+
+
+\section{Experimento III - Contagem de números}
+Nesse experimento foi implementada a paralelização de um algoritmo para contagem da ocorrência de números em um vetor, para 1, 2 e 4 threads foi possível identificar que o valor total da soma de ocorrências de cada número é igual a $10^8$, que é igual ao tamanho do vetor de entrada, o que confirma a validade da solução utilizada para paralelização.
+
+A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threads está disponível na Tabela \ref{tab:ex03}.
+
+\section{Experimento IV - Conjectura de Goldbach}
+Nesse experimento foi feita a comparação entre diferentes modos de escalonamento para a paralelização do algoritmo da conjectura de goldbach.
+
+\section{Experimento V - Jogo da Vida}
+Nesse experimento foi implementada a paralelização de um algoritmo do jogo da vida.
+Para 1, 2 e 4 threads foi possível identificar que a solução permanece a mesma, em um tabuleiro de tamanho 1000x1000.
+
 
 \bibliographystyle{IEEEtran}
 

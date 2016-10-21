@@ -25,20 +25,25 @@ ifneq ($(gprof), 0)
 	CFLAGS+= -pg
 endif
 
-all: life life2
+all: ex01
 
 stats: clean
-	gcc -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS)
+	gcc -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS) $(GREP)
 
-life: stats
+ex01: stats
 	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
-life2: stats
+ex02: stats
 	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
-test: life life2
-	bin/life 1000
-	bin/life2 1000
+ex03: stats
+	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
+
+ex04: stats
+	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP) -DSCHEDULE=${schedule} -DSCHEDULE_TXT=\"${schedule}\"
+
+ex05: stats
+	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
 clean:
 	rm -rf bin/* obj/*
