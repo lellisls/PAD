@@ -28,22 +28,22 @@ endif
 all: ex01
 
 stats: clean
-	gcc -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS) $(GREP)
+	gcc-6 -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS) $(GREP)
 
 ex01: stats
-	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
+	gcc-6 src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
 ex02: stats
-	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
+	gcc-6 src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
 ex03: stats
-	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
+	gcc-6 src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
 ex04: stats
-	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP) -DSCHEDULE=${schedule} -DSCHEDULE_TXT=\"${schedule}\"
+	gcc-6 src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP) -DSCHEDULE=${schedule} -DSCHEDULE_TXT=\"${schedule}\"
 
 ex05: stats
-	gcc src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
+	gcc-6 src/$@.c obj/* -o bin/$@ $(CFLAGS) $(GREP)
 
 clean:
 	rm -rf bin/* obj/*

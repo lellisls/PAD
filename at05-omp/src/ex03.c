@@ -27,7 +27,7 @@ void CountNumbers( int a[], int n ) {
     free( count );
   }
   volatile int ssssss = sum;
-  printf( "%d\n", sum );
+  // printf( "%d\n", sum );
 }
 
 

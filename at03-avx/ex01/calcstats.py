@@ -2,12 +2,13 @@ import numpy as np
 import sys
 import csv
 
+
 def chunks(l, n):
     n = max(1, n)
     data = []
     for i in xrange(0, len(l), n):
-        aux = [cnk[1:] for cnk in l[i:i + n] ]
-        data.append( [l[i:i + n][0][0]]+ list(np.mean(aux, axis=0)))
+        aux = [cnk[1:] for cnk in l[i:i + n]]
+        data.append([l[i:i + n][0][0]] + list(np.mean(aux, axis=0)))
     return data
 
 with open(sys.argv[1], 'rb') as csvfile:

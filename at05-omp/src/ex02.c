@@ -11,7 +11,7 @@ void ce( int *a, int *b ) {
 
 void OddEven( int a[], int n ) {
   int i, j, nHalf, lastEven, lastOdd;
-
+  /* #pragma omp parallel for default(none) shared(a) private(i, j) firstprivate(lastOdd, lastEven, n) */
   nHalf = n / 2;
   if( n % 2 == 0 ) {
     lastEven = nHalf - 1;
@@ -21,13 +21,17 @@ void OddEven( int a[], int n ) {
     lastEven = nHalf - 1;
     lastOdd = nHalf - 1;
   }
-  #pragma omp parallel for default(none) shared(a) private(i, j) firstprivate(lastOdd, lastEven, n)
-  for( i = 0; i < n - 1; i++ ) {
-    for( j = 0; j <= lastOdd; j++ ) {
-      ce( &a[ 2 * j + 1 ], &a[ 2 * j + 2 ] ); /* odd */
-    }
-    for( j = 0; j <= lastEven; j++ ) {
-      ce( &a[ 2 * j ], &a[ 2 * j + 1 ] ); /* even */
+#pragma omp parallel private(i)
+  {
+    for( i = 0; i < n - 1; i++ ) {
+#pragma omp for
+      for( j = 0; j <= lastOdd; j++ ) {
+        ce( &a[ 2 * j + 1 ], &a[ 2 * j + 2 ] ); /* odd */
+      }
+#pragma omp for
+      for( j = 0; j <= lastEven; j++ ) {
+        ce( &a[ 2 * j ], &a[ 2 * j + 1 ] ); /* even */
+      }
     }
   }
 }
@@ -59,14 +63,14 @@ int main( int argc, char **argv ) {
 
   OddEven( a, size );
 
-  sprintf( str, "%d; %d", size );
+  sprintf( str, "%d; %d", size, num_thds );
   avaliacao( str, size );
   PRINT(
-  for( i = 0; i < size; ++i ) {
-    printf( "%d ", a[ i ] );
-  }
-  printf( "\n" );
-  );
+    for( i = 0; i < size; ++i ) {
+      printf( "%d ", a[ i ] );
+    }
+    printf( "\n" );
+    );
 
   free( a );
   return( 0 );
