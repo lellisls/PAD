@@ -111,7 +111,7 @@ gcc-6 src/ex01.c obj/* -o bin/ex01
 src/ex01.c:64:13: note: LOOP VECTORIZED
 	\end{BVerbatim}
 \end{adjustbox}
-\caption{Saída do compilador gcc, apontando vetorização automática do laço.\label{fig:matA}}
+\caption{Saída do compilador gcc, apontando vetorização automática do laço.\label{fig:loop-vectorized}}
 \end{figure}
 
 Nas Figuras \ref{fig:matA} e \ref{fig:matB} estão as matrizes de entrada, foi feita a multiplicação dessas matrizes em um outro software confiável (R), e o resultado está na Figura \ref{fig:matC-R}, enfim, para todos os testes executados, obtivemos a mesma saída, representada na Figura \ref{fig:matC}.f Assim, comparando os resultados é fácil observar que a multiplicação está sendo feita corretamente.
@@ -188,21 +188,75 @@ Read 64 items
 	\end{adjustbox}
 	\caption{Matriz de saída C - obtida em todos os testes. \label{fig:matC}}
 \end{figure}
+
 \subsection{Comparando speedup e eficiência}
-Na Tabela \ref{tab:ex01} estão disponíveis os resultados dos testes.
+Na Tabela \ref{tab:ex01} estão disponíveis os resultados dos testes, para 1, 2, 4, 8 e 12 threads, da multiplicação de matrizes com blocagem e vetorização automática, utilizando blocos de tamanho 128x128. Na Figura \ref{fig:ex01-speedup}, está disponível a comparação do speedup da multiplicação de matrizes de largura 1024 e 4096.
+
+\begin{table}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+	\centering
+	\begin{tabular}{lllrrrr}%
+		\bfseries Tam. & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
+		\csvreader[]{tables/ex01.csv}{}
+		{\\ \csvcoli & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii}
+	\end{tabular}
+	\end{adjustbox}
+	\caption{\label{tab:ex01}Avaliação do desempenho do algoritmo de multiplicação com blocagem e vetorização com 1, 2, 4, 8 e 12 threads.}
+\end{table}
+
+\begin{figure}[htb!]
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01.txt' index 0};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01.txt' index 1};
+	\legend{$1024$, $4096$}
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação do speedup da multiplicação de matrizes para 1, 2, 4, 8 e 12 Threads. \label{fig:ex01-speedup}}
+\end{figure}
+
 \section{Experimento II - Odd-Even Sort}
 Nesse experimento foi feita a paralelização do algoritmo Odd-Even Sort, realizando a ordenação de valores pseudo aleatórios com 1, 2 e 4 threads obteve-se os mesmos resultados, como visto na Figura \ref{fig:ex02}.
 \begin{figure}[htb!]
 	\begin{adjustbox}{max width=\linewidth}
 		\begin{BVerbatim}
-Entrada  : 6 8 5 3 6 9 8 1 9 4
-1 Thread : 1 3 4 5 6 6 8 8 9 9
-2 Threads: 1 3 4 5 6 6 8 8 9 9
-4 Threads: 1 3 4 5 6 6 8 8 9 9
+Entrada  :   6 8 5 3 6 9 8 1 9 4
+1 Thread :   1 3 4 5 6 6 8 8 9 9
+2 Threads:   1 3 4 5 6 6 8 8 9 9
+4 Threads:   1 3 4 5 6 6 8 8 9 9
+8 Threads:   1 3 4 5 6 6 8 8 9 9
+12 Threads:  1 3 4 5 6 6 8 8 9 9
 		\end{BVerbatim}
 	\end{adjustbox}
-	\caption{Resultados dos testes.\label{fig:ex02}}
+	\caption{Resultados dos testes do algoritmo Odd-Even sort de uma lista de 10 elementos para 1, 2, 4, 8 e 12 threads.\label{fig:ex02}}
 \end{figure}
+
+Foram então realizados testes para vetores de tamanho $4*10^4$, os resultados estão disponíveis na Tabela \ref{tab:ex02}, e o gráfico de speedup está na Figura \ref{fig:ex02-speedup}.
+
+\begin{table}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\centering
+		\begin{tabular}{lllrrrr}%
+			\bfseries Tam. & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
+			\csvreader[]{tables/ex02.csv}{}
+			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+		\end{tabular}
+	\end{adjustbox}
+	\caption{\label{tab:ex02}Avaliação do desempenho do algoritmo Odd-Even sort para 1, 2, 4, 8 e 12 threads.}
+\end{table}
+
+\begin{figure}[htb!]
+	\centering
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02.txt' index 0};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação do speedup do Odd-Even sort para 1, 2, 4, 8 e 12 Threads. 
+	\label{fig:ex02-speedup}}
+\end{figure}
+
 
 
 \section{Experimento III - Contagem de números}
@@ -210,15 +264,93 @@ Nesse experimento foi implementada a paralelização de um algoritmo para contag
 
 A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threads está disponível na Tabela \ref{tab:ex03}.
 
+\begin{table}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\centering
+		\begin{tabular}{lllrrrr}%
+			\bfseries Tam. & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
+			\csvreader[]{tables/ex03.csv}{}
+			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+		\end{tabular}
+	\end{adjustbox}
+	\caption{\label{tab:ex03}Avaliação do desempenho do algoritmo de contagem de números para 1, 2, 4, 8 e 12 threads.}
+\end{table}
+
+\begin{figure}[htb!]
+	\centering
+
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03.txt' index 0};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação do speedup do algoritmo de contagem para 1, 2, 4, 8 e 12 Threads. 
+	\label{fig:ex03-speedup}}
+\end{figure}
+
 \section{Experimento IV - Conjectura de Goldbach}
 Nesse experimento foi feita a comparação entre diferentes modos de escalonamento para a paralelização do algoritmo da conjectura de goldbach.
 
+
+A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threads usando os diferentes tipos de escalonamento está disponível na Tabela \ref{tab:ex04}.
+
+\begin{table}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\centering
+		\begin{tabular}{lllrrrr}%
+			\bfseries Escalonamento & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
+			\csvreader[]{tables/ex04.csv}{}
+			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+		\end{tabular}
+	\end{adjustbox}
+	\caption{\label{tab:ex04}Avaliação do desempenho do algoritmo de contagem de números para 1, 2, 4, 8 e 12 threads.}
+\end{table}
+
+\begin{figure}[htb!]
+	\centering
+	
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 0};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 1};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 2};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 3};
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 4};
+	\legend{static 10, static 5, static 2, dynamic, guided};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação do speedup do algoritmo de goldbach, para diferentes tipos de escalonamento e para 1, 2, 4, 8 e 12 Threads. 
+		\label{fig:ex04-speedup}}
+\end{figure}
 
 
 \section{Experimento V - Jogo da Vida}
 Nesse experimento foi implementada a paralelização de um algoritmo do jogo da vida.
 Para 1, 2 e 4 threads foi possível identificar que a solução permanece a mesma, em um tabuleiro de tamanho 1000x1000.
 
+\begin{table}[htb!]
+	\begin{adjustbox}{max width=\linewidth}
+		\centering
+		\begin{tabular}{lllrrrr}%
+			\bfseries Tamanho & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
+			\csvreader[]{tables/ex05.csv}{}
+			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
+		\end{tabular}
+	\end{adjustbox}
+	\caption{\label{tab:ex05}Avaliação do desempenho do algoritmo de contagem de números para 1, 2, 4, 8 e 12 threads.}
+\end{table}
+
+\begin{figure}[htb!]
+	\centering
+	
+	\begin{tikzpicture}
+	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
+	\addplot gnuplot [raw gnuplot] {plot 'plots/ex05.txt' index 0};
+	\end{axis}
+	\end{tikzpicture}
+	\caption{Comparação do speedup do algoritmo do jogo da vida para 1, 2, 4, 8 e 12 Threads. 
+		\label{fig:ex05-speedup}}
+\end{figure}
 
 \bibliographystyle{IEEEtran}
 
