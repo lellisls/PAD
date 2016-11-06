@@ -1,9 +1,13 @@
 #include "stats.h"
+#include <math.h>
 #include <mpi.h>
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+
+#ifndef BOARDSIZE
+#define BOARDSIZE 10
+#endif
 
 void evolve( int *val, int *aux, int width, int heigth ) {
   int up, upright, right, rightdown, down, downleft, left, leftup;
@@ -71,54 +75,73 @@ int main( int argc, char *argv[] ) {
   MPI_Comm_size( MPI_COMM_WORLD, &commSize );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
-  n = 10;
+  n = BOARDSIZE;
   steps = 4 * ( n - 3 );
   n2 = n + 2;
   size = n2 * n2;
+  /* ONLY HOST CODE */
   if( rank == 0 ) {
     data = ( int* ) malloc( size * sizeof( int ) );
     for( i = 0; i < size; ++i ) {
       data[ i ] = 0;
       /* aux[ i ] = 0; */
     }
-    data[ 1 * n + 2 ] = 1;
-    data[ 2 * n + 3 ] = 1;
-    data[ 3 * n + 1 ] = 1;
-    data[ 3 * n + 2 ] = 1;
-    data[ 3 * n + 3 ] = 1;
-    PRINT( print( data, n, 0, 12 ); );
+    data[ 1 * n2 + 2 ] = 1;
+    data[ 2 * n2 + 3 ] = 1;
+    data[ 3 * n2 + 1 ] = 1;
+    data[ 3 * n2 + 2 ] = 1;
+    data[ 3 * n2 + 3 ] = 1;
+    PRINT( print( data, n2, 0, 12 ); );
     for( iRank = 1; iRank < commSize; ++iRank ) {
-      int rows = floor( ( float ) size / commSize );
-      int first = n2 + iRank * ( rows * n2 );
+      int rows = floor( ( float ) n / commSize );
+      int first = n2 + ( iRank ) * ( rows * n2 );
       if( iRank == commSize - 1 ) {
-        rows = size - first;
+        rows = n - iRank * rows;
       }
-      printf("Size: %d\n", rows * n2);
+      /*
+       * printf( "iRank: %d, Rows: %d, First: %d, Size: %d, ", iRank, rows, first, size );
+       * printf( "DataSize: %d\n", rows * n2 );
+       * for(i = first; i < (first +  rows * n2); ++i){
+       *   if( i % n2 == 0 ) {
+       *     printf( "\n" );
+       *   }
+       *   printf( "%d ", data[ i ] );
+       * }
+       * printf( "\n" );
+       */
       MPI_Send( &data[ first ], rows * n2, MPI_INTEGER, iRank, 42, MPI_COMM_WORLD );
     }
   }
-  int localHeigth = floor( ( float ) size / commSize ) + 2;
-  int first = rank * localHeigth;
-  if( rank == commSize - 1 ) {
-    localHeigth = size - first + 2;
-  }
-  int localSize = localHeigth * n2;
-  int *localdata = ( int* ) malloc( sizeof( int ) * localSize );
-  int *aux = ( int* ) malloc( sizeof( int ) * localSize );
-  int *aux2;
+  /* END OF HOST CODE */
 
-  for( i = 0; i < localSize; ++i ) {
-    localdata[ i ] = 0;
+  int rows = floor( ( float ) n / commSize );
+  int first = n2 + ( rank ) * ( rows * n2 );
+  if( rank == commSize - 1 ) {
+    rows = n - rank * rows;
   }
-  if( rank == 0 ) {
-    for( i = n2; i < localSize; ++i ) {
-      localdata[ i ] = data[ n2 + i ];
+  int localSize = ( rows + 2 ) * n2;
+  int *localdata = ( int* ) calloc( localSize, sizeof( int ) );
+  int *aux = ( int* ) calloc( localSize, sizeof( int ) );
+  int *aux2;
+  if( rank == 0 ) { /* HOST */
+    for( i = n2; i < ( ( rows + 1 ) * n2 ); ++i ) {
+      localdata[ i ] = data[ i ];
     }
   }
-  else {
-    MPI_Recv( &localdata[ n2 ], ( localHeigth - 2 ) * n2, MPI_INTEGER, 0,
-              42, MPI_COMM_WORLD, &status );
+  else { /* NOT HOST */
+    MPI_Recv( &localdata[ n2 ], rows * n2, MPI_INTEGER, 0,
+              42, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
   }
+  // printf( "\n\nMy rank: %d, rows: %d, first: %d, localsize: %d, ", rank, rows, first, localSize );
+  // printf( "DataSize: %d\n", rows * n2 );
+  // printf( "\n" );
+  // for( i = 0; i < localSize; ++i ) {
+  //   if( i % n2 == 0 ) {
+  //     printf( "\n  %d %02d: ", rank, i );
+  //   }
+  //   printf( "%d ", localdata[ i ] );
+  // }
+  // printf( "\n\n" );
   int ierr;
   MPI_Request request1, request2, request3, request4;
   /* inicializacao( ); */
@@ -128,26 +151,57 @@ int main( int argc, char *argv[] ) {
       MPI_Isend( &localdata[ n2 ], n2, MPI_INTEGER, rank - 1, 10, MPI_COMM_WORLD, &request2 );
     }
     if( rank < commSize - 1 ) {
-      MPI_Irecv( &localdata[ localSize - n2 ], n2, MPI_INTEGER, rank + 1, 11, MPI_COMM_WORLD, &request3 );
-      MPI_Isend( &localdata[ localSize - n2 * 2 ], n2, MPI_INTEGER, rank + 1, 11, MPI_COMM_WORLD, &request4 );
+      MPI_Irecv( &localdata[ localSize - n2 ], n2, MPI_INTEGER, rank + 1, 10, MPI_COMM_WORLD, &request3 );
+      MPI_Isend( &localdata[ localSize - n2 * 2 ], n2, MPI_INTEGER, rank + 1, 10, MPI_COMM_WORLD, &request4 );
     }
     if( rank > 0 ) {
-      MPI_Wait( &request1, &status );
-      MPI_Wait( &request2, &status );
+      MPI_Wait( &request1, MPI_STATUS_IGNORE );
+      MPI_Wait( &request2, MPI_STATUS_IGNORE );
     }
     if( rank < commSize - 1 ) {
-      MPI_Wait( &request3, &status );
-      MPI_Wait( &request4, &status );
+      MPI_Wait( &request3, MPI_STATUS_IGNORE );
+      MPI_Wait( &request4, MPI_STATUS_IGNORE );
     }
-    evolve( localdata, aux, n2, localHeigth );
+    // for( i = 0; i < localSize; ++i ) {
+    //   if( i % n2 == 0 ) {
+    //     printf( "\n  %d %02d: ", rank, i );
+    //   }
+    //   printf( "%d ", localdata[ i ] );
+    // }
+    // printf( "\n\n" );
+    evolve( localdata, aux, n2, rows + 2 );
     aux2 = localdata; localdata = aux; aux = aux2;
+    // for( i = n2; i < localSize - n2; ++i ) {
+    //   if( i % n2 == 0 ) {
+    //     printf( "\n  %d %02d: ", rank, i );
+    //   }
+    //   printf( "%d ", localdata[ i ] );
+    // }
+    // printf( "\n\n" );
+  }
+  MPI_Barrier( MPI_COMM_WORLD );
+  if( rank != 0 ) {
+    MPI_Send( &localdata[ n2 ], rows * n2, MPI_INTEGER, 0, 42, MPI_COMM_WORLD );
+  }else{
+    for( i = n2; i < ( ( rows + 1 ) * n2 ); ++i ) {
+      data[ i ] = localdata[ i ];
+    }
+    for(iRank = 1; iRank < commSize; ++iRank){
+      int rows = floor( ( float ) n / commSize );
+      int first = n2 + ( iRank ) * ( rows * n2 );
+      if( iRank == commSize - 1 ) {
+        rows = n - iRank * rows;
+      }
+      MPI_Recv( &data[ first ], rows * n2, MPI_INTEGER, iRank, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    }
+    PRINT( print( data, n2, n2 - 12, n2 ); );
   }
   /* char str[ 20 ]; */
   /*
    * sprintf( str, "%d; %d", n );
    * avaliacao( str, size );
    * if( rank == 0){
-   * PRINT( print( data, n, n - 12, n ); );
+   *
    * }
    */
   MPI_Finalize( );
