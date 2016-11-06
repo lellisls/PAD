@@ -9,7 +9,7 @@ monkey ?= 0
 ifneq ($(monkey), 0)
 	CXX=/opt/mpi2/bin/mpicc
 	MPIRUN=/opt/mpi2/bin/mpirun
-	MPIRUN_FLAGS =-np 14
+	MPIRUN_FLAGS =-np 14 -hostfile maquinas.txt
 	MPIRUN_PREFIX = --prefix /opt/mpi2/
 endif
 
