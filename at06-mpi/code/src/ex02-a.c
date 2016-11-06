@@ -98,17 +98,17 @@ int main( int argc, char *argv[] ) {
       if( iRank == commSize - 1 ) {
         rows = n - iRank * rows;
       }
-      /*
-       * printf( "iRank: %d, Rows: %d, First: %d, Size: %d, ", iRank, rows, first, size );
-       * printf( "DataSize: %d\n", rows * n2 );
-       * for(i = first; i < (first +  rows * n2); ++i){
-       *   if( i % n2 == 0 ) {
-       *     printf( "\n" );
-       *   }
-       *   printf( "%d ", data[ i ] );
-       * }
-       * printf( "\n" );
-       */
+
+      printf( "iRank: %d, Rows: %d, First: %d, Size: %d, ", iRank, rows, first, size );
+      printf( "DataSize: %d\n", rows * n2 );
+      // for(i = first; i < (first +  rows * n2); ++i){
+      //   if( i % n2 == 0 ) {
+      //     printf( "\n" );
+      //   }
+      //   printf( "%d ", data[ i ] );
+      // }
+      // printf( "\n" );
+
       MPI_Send( &data[ first ], rows * n2, MPI_INTEGER, iRank, 42, MPI_COMM_WORLD );
     }
   }
