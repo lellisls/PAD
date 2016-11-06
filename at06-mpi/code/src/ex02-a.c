@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #ifndef BOARDSIZE
-#define BOARDSIZE 10
+#define BOARDSIZE 1000
 #endif
 
 void evolve( int *val, int *aux, int width, int heigth ) {
@@ -179,7 +179,7 @@ int main( int argc, char *argv[] ) {
     // }
     // printf( "\n\n" );
   }
-  MPI_Barrier( MPI_COMM_WORLD );
+  // MPI_Barrier( MPI_COMM_WORLD );
   if( rank != 0 ) {
     MPI_Send( &localdata[ n2 ], rows * n2, MPI_INTEGER, 0, 42, MPI_COMM_WORLD );
   }else{
