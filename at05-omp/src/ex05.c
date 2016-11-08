@@ -74,6 +74,7 @@ int main( int argc, char const *argv[] ) {
   else {
     steps = atoi( argv[ 3 ] );
   }
+  n = n + 2;
   size = n * n;
   omp_set_num_threads( num_thds );
   int *data = ( int* ) malloc( size * sizeof( int ) );
