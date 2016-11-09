@@ -11,13 +11,16 @@
 
 void evolve( int *val, int *aux, int width, int height ) {
   int up, upright, right, rightdown, down, downleft, left, leftup;
-  int sum = 0, estado, i, j, inj;
-#pragma omp parallel default(none) private(i, j, inj, estado, sum, up, upright, right, rightdown, down, downleft, left, leftup) shared(val, aux) firstprivate(width, height)
+  int sum = 0, estado, i, j, inj, iw;
+#pragma \
+  omp parallel private(i, j, iw, inj, estado, sum, up, upright, right, rightdown, down, downleft, left, leftup) shared(val, aux)
   {
-    #pragma omp for
+    // printf( "Thread num: %d\n", omp_get_thread_num( ) );
+#pragma omp for
     for( i = 1; i < height - 1; ++i ) {
+      iw = i * width;
       for( j = 1; j < width - 1; ++j ) {
-        inj = i * width + j;
+        inj = iw + j;
         estado = val[ inj ];
 
         up = val[ inj - width ];
@@ -76,7 +79,6 @@ int main( int argc, char *argv[] ) {
   MPI_Init( &argc, &argv );
   MPI_Comm_size( MPI_COMM_WORLD, &commSize );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-  // omp_set_num_threads( 4 );
   n = BOARDSIZE;
   steps = 4 * ( n - 3 );
   n2 = n + 2;
@@ -151,6 +153,7 @@ int main( int argc, char *argv[] ) {
   MPI_Request request1, request2, request3, request4;
   /* inicializacao( ); */
   for( step = 0; step < steps; ++step ) {
+
     if( rank > 0 ) {
       MPI_Irecv( &localdata[ 0 ], n2, MPI_INTEGER, rank - 1, 10, MPI_COMM_WORLD, &request1 );
       MPI_Isend( &localdata[ n2 ], n2, MPI_INTEGER, rank - 1, 10, MPI_COMM_WORLD, &request2 );
@@ -167,6 +170,7 @@ int main( int argc, char *argv[] ) {
       MPI_Wait( &request3, MPI_STATUS_IGNORE );
       MPI_Wait( &request4, MPI_STATUS_IGNORE );
     }
+
     /*
      * for( i = 0; i < localSize; ++i ) {
      *   if( i % n2 == 0 ) {
