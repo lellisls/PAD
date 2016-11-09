@@ -141,8 +141,8 @@ int main( int argc, char *argv[] ) {
       }else{
         int localSize[2] = { xsz, rows};
         printf( "%d: %d x %d, %d pixels --- %d -> %d\n", iRank, xsz, rows, pixels, first, last );
-        MPI_Send( &n, 1, MPI_INTEGER, iRank, 100, MPI_COMM_WORLD );
-        MPI_Send( &localSize[ 0 ], 2, MPI_INTEGER, iRank, 101, MPI_COMM_WORLD );
+        MPI_Send( &n, 1, MPI_INT, iRank, 100, MPI_COMM_WORLD );
+        MPI_Send( &localSize[ 0 ], 2, MPI_INT, iRank, 101, MPI_COMM_WORLD );
         if(rows != 0){
           MPI_Send( &image->data[ first ], pixels, pixelType, iRank, 102, MPI_COMM_WORLD );
         }
@@ -150,8 +150,8 @@ int main( int argc, char *argv[] ) {
     }
   }
   else {
-    MPI_Recv( &n, 1, MPI_INTEGER, 0, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-    MPI_Recv( &localImage->x, 2, MPI_INTEGER, 0, 101, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    MPI_Recv( &n, 1, MPI_INT, 0, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    MPI_Recv( &localImage->x, 2, MPI_INT, 0, 101, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
     xsz = localImage->x; ysz = localImage->y;
     localImage->data = ( PPMPixel* ) malloc( xsz * ysz * sizeof( PPMPixel ) );
     if(ysz != 0){

@@ -108,7 +108,7 @@ int main( int argc, char *argv[] ) {
       // }
       // printf( "\n" );
 
-      MPI_Send( &data[ first ], rows * n2, MPI_INTEGER, iRank, 42, MPI_COMM_WORLD );
+      MPI_Send( &data[ first ], rows * n2, MPI_INT, iRank, 42, MPI_COMM_WORLD );
     }
   }
   /* END OF HOST CODE */
@@ -128,7 +128,7 @@ int main( int argc, char *argv[] ) {
     }
   }
   else { /* NOT HOST */
-    MPI_Recv( &localdata[ n2 ], rows * n2, MPI_INTEGER, 0,
+    MPI_Recv( &localdata[ n2 ], rows * n2, MPI_INT, 0,
               42, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
   }
   // printf( "\n\nMy rank: %d, rows: %d, first: %d, localsize: %d, ", rank, rows, first, localSize );
@@ -146,12 +146,12 @@ int main( int argc, char *argv[] ) {
   /* inicializacao( ); */
   for( step = 0; step < steps; ++step ) {
     if( rank > 0 ) {
-      MPI_Irecv( &localdata[ 0 ], n2, MPI_INTEGER, rank - 1, 10, MPI_COMM_WORLD, &request1 );
-      MPI_Isend( &localdata[ n2 ], n2, MPI_INTEGER, rank - 1, 10, MPI_COMM_WORLD, &request2 );
+      MPI_Irecv( &localdata[ 0 ], n2, MPI_INT, rank - 1, 10, MPI_COMM_WORLD, &request1 );
+      MPI_Isend( &localdata[ n2 ], n2, MPI_INT, rank - 1, 10, MPI_COMM_WORLD, &request2 );
     }
     if( rank < commSize - 1 ) {
-      MPI_Irecv( &localdata[ localSize - n2 ], n2, MPI_INTEGER, rank + 1, 10, MPI_COMM_WORLD, &request3 );
-      MPI_Isend( &localdata[ localSize - n2 * 2 ], n2, MPI_INTEGER, rank + 1, 10, MPI_COMM_WORLD, &request4 );
+      MPI_Irecv( &localdata[ localSize - n2 ], n2, MPI_INT, rank + 1, 10, MPI_COMM_WORLD, &request3 );
+      MPI_Isend( &localdata[ localSize - n2 * 2 ], n2, MPI_INT, rank + 1, 10, MPI_COMM_WORLD, &request4 );
     }
     if( rank > 0 ) {
       MPI_Wait( &request1, MPI_STATUS_IGNORE );
@@ -180,7 +180,7 @@ int main( int argc, char *argv[] ) {
   }
   // MPI_Barrier( MPI_COMM_WORLD );
   if( rank != 0 ) {
-    MPI_Send( &localdata[ n2 ], rows * n2, MPI_INTEGER, 0, 42, MPI_COMM_WORLD );
+    MPI_Send( &localdata[ n2 ], rows * n2, MPI_INT, 0, 42, MPI_COMM_WORLD );
   }else{
     for( i = n2; i < ( ( rows + 1 ) * n2 ); ++i ) {
       data[ i ] = localdata[ i ];
@@ -191,7 +191,7 @@ int main( int argc, char *argv[] ) {
       if( iRank == commSize - 1 ) {
         rows = n - iRank * rows;
       }
-      MPI_Recv( &data[ first ], rows * n2, MPI_INTEGER, iRank, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+      MPI_Recv( &data[ first ], rows * n2, MPI_INT, iRank, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
     }
     PRINT( print( data, n2, n2 - 12, n2 ); );
   }
