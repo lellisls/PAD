@@ -73,9 +73,6 @@ int main( int argc, char *argv[] ) {
   MPI_Init_thread( &argc, &argv, MPI_THREAD_MULTIPLE, &provided );
   MPI_Comm_size( MPI_COMM_WORLD, &commSize );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-
-  printf("provided: %d\n", provided);
-
   n = BOARDSIZE;
   steps = 4 * ( n - 3 );
   n2 = n + 2;

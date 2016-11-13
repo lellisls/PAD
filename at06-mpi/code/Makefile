@@ -29,7 +29,7 @@ ex02-b: stats
 	${CXX} -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
 	time ${MPIRUN} ${MPIRUN_FLAGS} bin/$@ ${MPIRUN_PREFIX}
 
-ex03-a: stats
+ex03: stats
 	${CXX} -fopenmp -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
 	time ${MPIRUN} ${MPIRUN_FLAGS_OMP} bin/$@ ${MPIRUN_PREFIX}
 
