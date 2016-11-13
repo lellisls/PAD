@@ -16,7 +16,7 @@ ifneq ($(monkey), 0)
 	CFLAGS+= -DBOARDSIZE=1000
 endif
 
-all: ex02-a ex04
+all: ex02-a ex02-b ex03 ex04
 
 stats: clean
 	gcc -c src/$@.c -Iinc -o obj/$@.o $(CFLAGS) $(GREP)
