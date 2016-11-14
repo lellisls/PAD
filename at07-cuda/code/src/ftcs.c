@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -7,7 +8,7 @@
 #define T 0.01
 #define kappa 0.000045
 
-void main( void ) {
+int main( void ) {
 
   double *tmp, *u, *u_prev;
   double x, t;
@@ -24,17 +25,28 @@ void main( void ) {
           ( n + 1 ), dt, dx, dx * dx, kappa, kappa * dt / ( dx * dx ) );
   printf( "Iteracoes previstas: %g\n", T / dt );
 
+  double start = omp_get_wtime( );
+
   x = 0;
   for( i = 0; i < n + 1; i++ ) {
     if( x <= 0.5 ) {
       u_prev[ i ] = 200 * x;
     }
-    else { u_prev[ i ] = 200 * ( 1. - x ); }
+    else {
+      u_prev[ i ] = 200 * ( 1. - x );
+    }
     x += dx;
   }
-  printf( "dx=%g, x=%g, x-dx=%g\n", dx, x, x - dx );
-  printf( "u_prev[0,1]=%g, %g\n", u_prev[ 0 ], u_prev[ 1 ] );
-  printf( "u_prev[n-1,n]=%g, %g\n", u_prev[ n - 1 ], u_prev[ n ] );
+  /*
+   * for( i = 0; i < n + 1; i++ ) {
+   *   printf( "%.2f ", u_prev[ i ] );
+   * }
+   * printf( "\n" );
+   * printf("%f\n", x);
+   * printf( "dx=%g, x=%g, x-dx=%g\n", dx, x, x - dx );
+   * printf( "u_prev[0,1]=%g, %g\n", u_prev[ 0 ], u_prev[ 1 ] );
+   * printf( "u_prev[n-1,n]=%g, %g\n", u_prev[ n - 1 ], u_prev[ n ] );
+   */
 
   t = 0.;
   while( t < T ) {
@@ -54,6 +66,7 @@ void main( void ) {
       maxloc = i;
     }
   }
+  printf( "Tempo: \t %f \n", omp_get_wtime( ) - start );
   printf( "Maior valor u[%ld] = %g\n", maxloc, u[ maxloc ] );
-
+  return( 0 );
 }
