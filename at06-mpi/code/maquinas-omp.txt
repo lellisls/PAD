@@ -1,0 +1,3 @@
+monkey slots=1
+mandril slots=1
+primate slots=1

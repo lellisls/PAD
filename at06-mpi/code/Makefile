@@ -3,8 +3,9 @@
 
 CXX=/usr/lib64/openmpi/bin/mpicc
 MPIRUN=/usr/lib64/openmpi/bin/mpirun
-MPIRUN_FLAGS =-np 4
-MPIRUN_FLAGS_OMP =-np 1 --bind-to none
+MPIRUN_FLAGS =-np 6
+MPIRUN_FLAGS_OMP =-np 1 
+#--bind-to none
 MPIRUN_PREFIX=
 monkey ?= 0
 CFLAGS+= -lm -O3
@@ -12,8 +13,9 @@ ifneq ($(monkey), 0)
 	CXX=/opt/mpi2/bin/mpicc
 	MPIRUN=/opt/mpi2/bin/mpirun
 	MPIRUN_FLAGS =-np 14 -hostfile maquinas.txt
+	MPIRUN_FLAGS_OMP =-np 3 -hostfile maquinas-omp.txt 
 	MPIRUN_PREFIX = --prefix /opt/mpi2/
-	CFLAGS+= -DBOARDSIZE=1000
+	CFLAGS+= -DBOARDSIZE=2000
 endif
 
 all: ex02-a ex02-b ex03 ex04
