@@ -64,7 +64,7 @@ int main( void ) {
   /* Claculando quantidade de pontos */
   n = tam / dx;
 
-  int blockSize = 512;
+  int blockSize = 256;
   int numBlocks = ceil( n / ( float ) blockSize );
   printf( "Size: %d, numBlks: %d, numThds: %d, mult: %d\n", n, numBlocks, blockSize, numBlocks * blockSize );
 
