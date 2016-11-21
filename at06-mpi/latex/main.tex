@@ -64,38 +64,25 @@
 %\IEEEpeerreviewmaketitle
 
 \section{Introdução}
-Nesta atividade foram realizados experimentos relacionados com a implementação de técnicas de programação paralela em sistemas de memória compartilhada utilizando OpenMP.
+Nesta atividade foram realizados alguns exercícios utilizando MPI em conjunto com OpenMP.
 Cada experimento foi realizado 5 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles, sendo calculado o speedup pela fórmula $$speedup(P) = {{\textrm{Tempo para 1 thread} }\over{\textrm{Tempo para P threads} }}$$ e a eficiência pela fórmula $$eficiencia(P) = {{speedup(P)}\over{P}}$$
 
-Todos os programas foram feitos em C, com otimização -O3, utilizando a biblioteca PAPI para estimar o tempo total de processamento, e o número de cache misses.
+Todos os programas foram feitos em C, com otimização -O3, utilizando MPI-2.
 
 
 As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab:cpu}.
 
 \begin{table}[htb!]
-\centering
-\caption{Especificações da Máquina}
-\label{tab:cpu}
-\begin{tabular}{lr}
-CPU & Intel i7 990X \\
-Cores & 6\\
-Threads & 12\\
-Clock & 3.47 GHz\\
-Cache& 12 MB Smartcache \\
-RAM & 20 GB \\
-Hardware Counters & 7 \\
-SO & Ubuntu 14.04 \\
-Kernel & 3.13.0 \\
-GCC &  6.2.0\\
-\end{tabular}
-\end{table}
 
-\section{Experimento I - Multiplicação de Matrizes}
+\section{Exercício I- Novidades do MPI 3}
 
+O MPI 3 é padrão mais recente do MPI, e uma das suas maiores novidades é o suporte à sistemas de memória compartilhada, diminuindo a necessidade de utilização de pthreads ou OpenMP, assim como novidades em comunicação "One-Sided" e operações coletivas.
 
-Neste experimento foi feita a implementação da multiplicação de matrizes com vetorização e blocagem para utilização efetiva de cache, utilizando OpenMP.
-Foi utilizada a vetorização automática do compilador, como confirmado utilizando a flag "info-vec-all" do compilador tendo como resultado a saída disponível na Figura \ref{fig:loop-vectorized}.
+\subsection{Operações Coletivas Não-bloqueantes}
+Operações coletivas não bloqueantes, como as funções ``MPI_Ibcast'' e ``MPI_Iallreduce'' permitem uma maior sobreposição de comunicação e computação, aumentando a perfomance dos programas.
 
+\subsection{Neighborhood Collectives}
+Esse recurso permite a utilização de operações coletivas considerando uma topologia pré-definida. Assim, operações de redução e comunicação coletivas podem ser executadas de acordo com as vizinhanças de forma mais simples e direta.
 
 \subsection{Avaliando resultado da multiplicação}
 Utilizando o software R, foi possível conferir que a multiplicação das matrizes de tamanho 8x8 e com blocagem de tamanhos 2x2, 4x4 e 8x8, foi realizada com sucesso para até 4 threads.
@@ -107,7 +94,7 @@ gcc-6 src/ex01.c obj/* -o bin/ex01
 -Iinc -lpapi -march=native -fopenmp-ffast-math
 -ftree-vectorize -O3 -fopt-info-vec-all 2>&1 |
  grep -e "LOOP VECTORIZED" -e "error" || true
- 
+
 src/ex01.c:64:13: note: LOOP VECTORIZED
 	\end{BVerbatim}
 \end{adjustbox}
@@ -253,7 +240,7 @@ Foram então realizados testes para vetores de tamanho $4*10^4$, os resultados e
 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02.txt' index 0};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Comparação do speedup do Odd-Even sort para 1, 2, 4, 8 e 12 Threads. 
+	\caption{Comparação do speedup do Odd-Even sort para 1, 2, 4, 8 e 12 Threads.
 	\label{fig:ex02-speedup}}
 \end{figure}
 
@@ -284,7 +271,7 @@ A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threa
 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03.txt' index 0};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Comparação do speedup do algoritmo de contagem para 1, 2, 4, 8 e 12 Threads. 
+	\caption{Comparação do speedup do algoritmo de contagem para 1, 2, 4, 8 e 12 Threads.
 	\label{fig:ex03-speedup}}
 \end{figure}
 
@@ -308,7 +295,7 @@ A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threa
 
 \begin{figure}[htb!]
 	\centering
-	
+
 	\begin{tikzpicture}
 	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 0};
@@ -319,7 +306,7 @@ A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threa
 	\legend{static 10, static 5, static 2, dynamic, guided};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Comparação do speedup do algoritmo de goldbach, para diferentes tipos de escalonamento e para 1, 2, 4, 8 e 12 Threads. 
+	\caption{Comparação do speedup do algoritmo de goldbach, para diferentes tipos de escalonamento e para 1, 2, 4, 8 e 12 Threads.
 		\label{fig:ex04-speedup}}
 \end{figure}
 
@@ -342,13 +329,13 @@ Para 1, 2 e 4 threads foi possível identificar que a solução permanece a mesm
 
 \begin{figure}[htb!]
 	\centering
-	
+
 	\begin{tikzpicture}
 	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
 	\addplot gnuplot [raw gnuplot] {plot 'plots/ex05.txt' index 0};
 	\end{axis}
 	\end{tikzpicture}
-	\caption{Comparação do speedup do algoritmo do jogo da vida para 1, 2, 4, 8 e 12 Threads. 
+	\caption{Comparação do speedup do algoritmo do jogo da vida para 1, 2, 4, 8 e 12 Threads.
 		\label{fig:ex05-speedup}}
 \end{figure}
 
