@@ -65,279 +65,209 @@
 
 \section{Introdução}
 Nesta atividade foram realizados alguns exercícios utilizando MPI em conjunto com OpenMP.
-Cada experimento foi realizado 5 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles, sendo calculado o speedup pela fórmula $$speedup(P) = {{\textrm{Tempo para 1 thread} }\over{\textrm{Tempo para P threads} }}$$ e a eficiência pela fórmula $$eficiencia(P) = {{speedup(P)}\over{P}}$$
-
-Todos os programas foram feitos em C, com otimização -O3, utilizando MPI-2.
+Cada experimento foi realizado 3 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles, sendo calculado o speedup pela fórmula $$speedup(P) = {{\textrm{Tempo para 1 thread} }\over{\textrm{Tempo para P threads} }}$$ e a eficiência pela fórmula $$eficiencia(P) = {{speedup(P)}\over{P}}$$
 
 
-As especificações da máquina utilizada estão disponíveis na Tabela \ref{tab:cpu}.
+Foram utilizados dois computadores, um desktop (i5-3470, 4 cores, 4 threads, 8Gb RAM DDR3) e um notebook (i5-3210M, 2 cores, 4 threads, 6Gb RAM DDR3), ambos com Fedora 25 x86\_64, kernel 4.8.8, GCC 6.2.1 e MPICH 3.2. Todos os programas foram feitos em C, com otimização -O3.
 
-\begin{table}[htb!]
 
 \section{Exercício I- Novidades do MPI 3}
 
-O MPI 3 é padrão mais recente do MPI, e uma das suas maiores novidades é o suporte à sistemas de memória compartilhada, diminuindo a necessidade de utilização de pthreads ou OpenMP, assim como novidades em comunicação "One-Sided" e operações coletivas.
+O MPI 3 é padrão mais recente do MPI, e uma das suas maiores novidades é o suporte à sistemas de memória compartilhada, diminuindo a necessidade de utilização de pthreads ou OpenMP, assim como novidades em comunicação "One-Sided" e operações coletivas. Abaixo, algumas das mudanças mais relevantes:
 
 \subsection{Operações Coletivas Não-bloqueantes}
-Operações coletivas não bloqueantes, como as funções ``MPI_Ibcast'' e ``MPI_Iallreduce'' permitem uma maior sobreposição de comunicação e computação, aumentando a perfomance dos programas.
+Operações coletivas não bloqueantes, como as funções ``MPI\_Ibcast'' e ``MPI\_Iallreduce'' permitem uma maior sobreposição de comunicação e computação, aumentando a perfomance dos programas.
 
 \subsection{Neighborhood Collectives}
 Esse recurso permite a utilização de operações coletivas considerando uma topologia pré-definida. Assim, operações de redução e comunicação coletivas podem ser executadas de acordo com as vizinhanças de forma mais simples e direta.
 
-\subsection{Avaliando resultado da multiplicação}
-Utilizando o software R, foi possível conferir que a multiplicação das matrizes de tamanho 8x8 e com blocagem de tamanhos 2x2, 4x4 e 8x8, foi realizada com sucesso para até 4 threads.
+\subsection{Novidades em RMA}
 
-\begin{figure}[htb!]
-\begin{adjustbox}{max width=\linewidth}
-	\begin{BVerbatim}
-gcc-6 src/ex01.c obj/* -o bin/ex01
--Iinc -lpapi -march=native -fopenmp-ffast-math
--ftree-vectorize -O3 -fopt-info-vec-all 2>&1 |
- grep -e "LOOP VECTORIZED" -e "error" || true
+Foram adicionadas novas rotinas para criação de janelas, como ``MPI\_Win\_allocate'' , ``MPI\_Win\_create\_dynamic'' e ``MPI\_Win\_allocate\_shared''.
 
-src/ex01.c:64:13: note: LOOP VECTORIZED
-	\end{BVerbatim}
-\end{adjustbox}
-\caption{Saída do compilador gcc, apontando vetorização automática do laço.\label{fig:loop-vectorized}}
+A função ``MPI\_Win\_allocate\_shared'' permite que uma janela de memória seja compartilhada entre diferentes processos em um mesmo nó usando apenas MPI, favorecendo a utilização do MPI em sistemas de memória compartilhada, e reduzindo a complexidade de implementação se comparado à aplicações hibridas (OpenMP + MPI).
+
+Consta também a adição de operações atômicas, como ``MPI\_Get\_accumulate'', ``MPI\_Fetch\_and\_op'', e ``MPI\_Compare\_and\_swap'', além da adição de versões adicionais de Put, Get e Accumulate que retornam objetos do tipo request, desta forma podemos usar funções Test e Wait para verificar localmente se a operação terminou.
+
+% ################################################################################
+% ################################################################################
+
+\section {Jogo da Vida}
+
+Foram implementadas duas versões do algoritmo ``Jogo da Vida'' utilizando MPI, a primeira baseada em comunicação ponto-a-ponto, e a segunda baseada na comunicação unidirecional do MPI-2. A divisão do tabuleiro foi feita verticalmente, de forma que cada processo recebe uma porção das linhas do tabuleiro para processar.
+
+Em ambos os exemplos, o resultado da execução do algoritmo em um tabuleiro pré-definido de tamanho 1250x1250, na Figura \ref{fig:ex02} uma representação das 10 últimas linhas e colunas do canto inferior direito após o final da execução do algoritmo.
+
+\textit{ Obs. A implementação do algoritmo com comunicação ponto-a-ponto poderia ter sido otimizada caso fosse feito uma troca entre os ponteiros ``aux'' e ``localdata'', mas essa otimização não era possível no segundo exemplo, então teve que ser descartada para tornar a comparação entre os dois mais justa. }
+
+
+\begin{figure}[!htb]
+\begin{verbatim}
++------------+
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|            |
+|         0  |
+|          0 |
+|        000 |
+|            |
++------------+
+\end{verbatim}
+\caption{Condições iniciais do teste em tabuleiro 10x10.}
+\label{fig:ex02}
 \end{figure}
 
-Nas Figuras \ref{fig:matA} e \ref{fig:matB} estão as matrizes de entrada, foi feita a multiplicação dessas matrizes em um outro software confiável (R), e o resultado está na Figura \ref{fig:matC-R}, enfim, para todos os testes executados, obtivemos a mesma saída, representada na Figura \ref{fig:matC}.f Assim, comparando os resultados é fácil observar que a multiplicação está sendo feita corretamente.
-
-\begin{figure}[htb!]
-\begin{adjustbox}{max width=\linewidth}
-	\begin{BVerbatim}
-77.26 54.95 97.36 30.08 77.49 52.89 61.91 09.30
-93.01 98.07 26.35 34.81 01.79 02.58 16.81 02.21
-55.81 06.73 33.68 29.09 51.98 84.37 58.02 92.30
-39.49 46.66 96.38 25.62 37.06 43.71 30.64 11.47
-30.14 03.15 18.54 38.51 77.74 11.46 43.59 77.36
-94.13 75.96 32.54 15.72 29.80 50.51 68.89 10.42
-07.24 26.37 09.34 86.87 51.28 13.41 02.09 41.48
-78.32 77.30 82.55 07.50 15.98 99.84 47.04 10.94
-	\end{BVerbatim}
-\end{adjustbox}
-\caption{Matriz de entrada A.\label{fig:matA}}
-\end{figure}
-
-
-\begin{figure}[htb!]
-	\begin{adjustbox}{max width=\linewidth}
-		\begin{BVerbatim}
-53.38 49.13 12.99 75.91 51.64 73.20 12.52 14.88
-18.77 32.11 42.48 32.74 92.06 82.02 02.43 94.08
-20.69 53.17 36.81 11.17 45.50 13.89 57.19 14.55
-90.37 29.36 44.99 61.69 28.21 17.39 45.93 86.46
-81.73 63.82 32.24 34.04 22.88 99.28 03.76 83.08
-24.02 54.03 01.59 33.12 59.44 23.96 25.51 99.03
-13.58 89.30 64.88 50.61 98.33 94.87 90.77 59.74
-80.96 10.86 93.02 75.87 58.01 48.39 10.26 54.28
-		\end{BVerbatim}
-	\end{adjustbox}
-	\caption{Matriz de entrada B.\label{fig:matB}}
-\end{figure}
-
-\begin{figure}[htb!]
-\begin{adjustbox}{max width=\linewidth}
-\begin{BVerbatim}
-> mat <- scan('tests/matA.txt')
-Read 64 items
-> matA <- matrix(mat, ncol=8, byrow=TRUE)
-> mat <- scan('tests/matB.txt')
-Read 64 items
-> matB <- matrix(mat, ncol=8, byrow=TRUE)
-> matA %*% matB
-[,1]      [,2]      [,3]     [,4]     [,5]     [,6]      [,7]     [,8]
-[1,] 19085.60 25052.627 15739.183 18835.35 25870.69 27321.73 15405.991 26215.50
-[2,] 11112.08 11920.428  9268.277 13877.77 17987.71 17764.61  6129.639 15531.88
-[3,] 20966.57 19662.331 17719.448 21130.57 23118.34 22763.81 12538.554 25618.59
-[4,] 12716.70 16902.660 11514.659 12312.51 18567.07 16690.43 11449.760 18455.39
-[5,] 19015.72 14011.617 15489.058 16075.05 15010.09 19263.26  8549.099 18740.86
-[6,] 13972.23 20151.302 12834.484 17929.95 24840.34 25054.49 11706.685 22538.45
-[7,] 16824.95  8883.894 11134.989 12318.85 10259.21 11951.11  5829.013 18200.02
-[8,] 13246.08 21673.026 12420.705 16922.20 26688.47 22320.94 13222.982 24906.10
-\end{BVerbatim}
-\end{adjustbox}
-\caption{Matriz de saída C - obtida no R. \label{fig:matC-R}}
-\end{figure}
-
-\begin{figure}[htb!]
-	\begin{adjustbox}{max width=\linewidth}
-		\begin{BVerbatim}
-19085.60 25052.62 15739.18 18835.35 25870.69 27321.73 15405.99 26215.50
-11112.08 11920.43 09268.28 13877.76 17987.71 17764.61 06129.64 15531.88
-20966.57 19662.33 17719.45 21130.57 23118.35 22763.81 12538.55 25618.59
-12716.70 16902.66 11514.66 12312.51 18567.07 16690.43 11449.76 18455.39
-19015.71 14011.62 15489.06 16075.05 15010.09 19263.26 08549.10 18740.86
-13972.23 20151.30 12834.48 17929.95 24840.34 25054.49 11706.68 22538.45
-16824.95 08883.89 11134.99 12318.85 10259.21 11951.11 05829.01 18200.02
-13246.08 21673.03 12420.70 16922.20 26688.47 22320.95 13222.98 24906.10
-		\end{BVerbatim}
-	\end{adjustbox}
-	\caption{Matriz de saída C - obtida em todos os testes. \label{fig:matC}}
-\end{figure}
-
-\subsection{Comparando speedup e eficiência}
-Na Tabela \ref{tab:ex01} estão disponíveis os resultados dos testes, para 1, 2, 4, 8 e 12 threads, da multiplicação de matrizes com blocagem e vetorização automática, utilizando blocos de tamanho 128x128. Na Figura \ref{fig:ex01-speedup}, está disponível a comparação do speedup da multiplicação de matrizes de largura 1024 e 4096.
+\subsection{Comunicação ponto-a-ponto \label{sec:ex02a}}
+O primeiro programa utiliza comunicações ponto-a-ponto para distribuir os dados entre os processos. Nesta abordagem, o processo 0 inicializa a matriz e envia os pedaços correspondentes para cada um dos outros processos. Durante a execução do algoritmo, as ghost zones são trocadas entre os processos por operações send e receive assíncronas. Os resultados da execução do primeiro algoritmo estão na Tabela \ref{tab:ex02a}, o número crescente de processos é distribuido igualmente entre os nós.
 
 \begin{table}[htb!]
+  \centering
 	\begin{adjustbox}{max width=\linewidth}
-	\centering
-	\begin{tabular}{lllrrrr}%
-		\bfseries Tam. & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
-		\csvreader[]{tables/ex01.csv}{}
-		{\\ \csvcoli & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi & \csvcolvii}
+	\begin{tabular}{llrrr}%
+		\bfseries Maquinas & \bfseries Processos & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia  \\
+    1 &	1	& 18.783	& 1	    & 1     \\
+    1 &	4	& 11.289	& 1.663 & 0.415 \\
+    2 &	2	& 15.589	& 1.204 & 0.602 \\
+    2 &	4	& 16.049	& 1.170 & 0.292 \\
+    2 &	8	& 30.498	& 0.615 &	0.076 \\
+
 	\end{tabular}
 	\end{adjustbox}
-	\caption{\label{tab:ex01}Avaliação do desempenho do algoritmo de multiplicação com blocagem e vetorização com 1, 2, 4, 8 e 12 threads.}
+	\caption{\label{tab:ex02a}Avaliação do desempenho do jogo da vida com comunicação ponto-a-ponto, tabuleiro de tamanho 1250x1250.}
 \end{table}
 
-\begin{figure}[htb!]
-	\centering
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex01.txt' index 1};
-	\legend{$1024$, $4096$}
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação do speedup da multiplicação de matrizes para 1, 2, 4, 8 e 12 Threads. \label{fig:ex01-speedup}}
-\end{figure}
+\subsection{Comunicação unidirecional \label{sec:ex02b}}
+O segundo programa utiliza comunicações unidirecionais, de forma que o MPI se utiliza de operações RMA para obter ou inserir dados em janelas de comunicação abertas pelos outros processos.
 
-\section{Experimento II - Odd-Even Sort}
-Nesse experimento foi feita a paralelização do algoritmo Odd-Even Sort, realizando a ordenação de valores pseudo aleatórios com 1, 2 e 4 threads obteve-se os mesmos resultados, como visto na Figura \ref{fig:ex02}.
-\begin{figure}[htb!]
-	\begin{adjustbox}{max width=\linewidth}
-		\begin{BVerbatim}
-Entrada  :   6 8 5 3 6 9 8 1 9 4
-1 Thread :   1 3 4 5 6 6 8 8 9 9
-2 Threads:   1 3 4 5 6 6 8 8 9 9
-4 Threads:   1 3 4 5 6 6 8 8 9 9
-8 Threads:   1 3 4 5 6 6 8 8 9 9
-12 Threads:  1 3 4 5 6 6 8 8 9 9
-		\end{BVerbatim}
-	\end{adjustbox}
-	\caption{Resultados dos testes do algoritmo Odd-Even sort de uma lista de 10 elementos para 1, 2, 4, 8 e 12 threads.\label{fig:ex02}}
-\end{figure}
+Nesta abordagem a matriz é inicializada no processo 0, que então abre uma janela de compartilhamento para que os outros processos busquem pelas linhas do tabuleiro atribuidas a eles. Durante o processamento, as ghost zones são implementadas por meio de janelas compartilhadas entre os processos.
 
-Foram então realizados testes para vetores de tamanho $4*10^4$, os resultados estão disponíveis na Tabela \ref{tab:ex02}, e o gráfico de speedup está na Figura \ref{fig:ex02-speedup}.
+
+Os resultados da execução do primeiro algoritmo estão na Tabela \ref{tab:ex02b}, o número crescente de processos é distribuido igualmente entre os nós.
 
 \begin{table}[htb!]
+  \centering
 	\begin{adjustbox}{max width=\linewidth}
-		\centering
-		\begin{tabular}{lllrrrr}%
-			\bfseries Tam. & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
-			\csvreader[]{tables/ex02.csv}{}
-			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-		\end{tabular}
+	\begin{tabular}{llrrr}%
+		\bfseries Maquinas & \bfseries Processos & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia  \\
+    1	& 1 &	18.732 & 1	   & 1     \\
+    1	& 4 &	12.840 & 1.458 & 0.364 \\
+    2	& 2 &	19.982 & 0.937 & 0.468 \\
+    2	& 4 &	19.933 & 0.939 & 0.234 \\
+    2	& 8 &	43.129 & 0.434 & 0.054 \\
+	\end{tabular}
 	\end{adjustbox}
-	\caption{\label{tab:ex02}Avaliação do desempenho do algoritmo Odd-Even sort para 1, 2, 4, 8 e 12 threads.}
+	\caption{\label{tab:ex02b}Avaliação do desempenho do jogo da vida com comunicação unidirecional, tabuleiro de tamanho 1250x1250.}
 \end{table}
 
-\begin{figure}[htb!]
-	\centering
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex02.txt' index 0};
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação do speedup do Odd-Even sort para 1, 2, 4, 8 e 12 Threads.
-	\label{fig:ex02-speedup}}
-\end{figure}
+\subsection{Discussão dos resultados}
+Ao analisar as tabelas \ref{tab:ex02a} e \ref{tab:ex02b} percebemos que os algoritmos com comunicação ponto-a-ponto se demonstraram muito mais eficientes, uma vez que a utilização do MPI não demonstrou nenhuma melhora no desempenho no algoritmo com comunicação unidirecional.
 
+Além disso, como esperado, os experimentos em que os 4 processos foram atribuidos à uma só máquina obtiveram melhor resultado se comparado à divisão entre duas máquinas, pois a segunda fica limitada pela comunicação por rede ethernet.
 
+Outra informação relevante é a baixíssima eficiência obtida ao se dividir o problema em 8 processos - em ambos os casos, essa foi a configuração que obteve o maior tempo de execução e também o menor speedup e eficiência.
 
-\section{Experimento III - Contagem de números}
-Nesse experimento foi implementada a paralelização de um algoritmo para contagem da ocorrência de números em um vetor, para 1, 2 e 4 threads foi possível identificar que o valor total da soma de ocorrências de cada número é igual a $10^8$, que é igual ao tamanho do vetor de entrada, o que confirma a validade da solução utilizada para paralelização.
+Finalmente, a comparação entre as duas implementações se torna mais evidente na Tabela \ref{tab:ex02comp}, onde os tempos de execução da Tabela \ref{tab:ex02b} são divididos pelos valores da Tabela \ref{tab:ex02a}.
 
-A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threads está disponível na Tabela \ref{tab:ex03}.
 
 \begin{table}[htb!]
+  \centering
 	\begin{adjustbox}{max width=\linewidth}
-		\centering
-		\begin{tabular}{lllrrrr}%
-			\bfseries Tam. & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
-			\csvreader[]{tables/ex03.csv}{}
-			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-		\end{tabular}
+	\begin{tabular}{llrrr}%
+		\bfseries Maquinas & \bfseries Processos & \bfseries Tempo Exp. A & \bfseries Tempo Exp. B & \bfseries B / A  \\
+    1	& 1 &	18.783 & 18.732 &	0.997 \\
+    1	& 4 &	11.289 & 12.840 &	1.137 \\
+    2	& 2 &	15.589 & 19.982 &	1.281 \\
+    2	& 4 &	16.049 & 19.933 &	1.241 \\
+    2	& 8 &	30.498 & 43.129 &	1.414 \\
+	\end{tabular}
 	\end{adjustbox}
-	\caption{\label{tab:ex03}Avaliação do desempenho do algoritmo de contagem de números para 1, 2, 4, 8 e 12 threads.}
+	\caption{\label{tab:ex02comp}Comparação entre o desempenho do jogo da vida com comunicação ponto-a-ponto (Exp. A) e comunicação unidirecional (Exp. B).}
 \end{table}
 
-\begin{figure}[htb!]
-	\centering
-
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex03.txt' index 0};
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação do speedup do algoritmo de contagem para 1, 2, 4, 8 e 12 Threads.
-	\label{fig:ex03-speedup}}
-\end{figure}
-
-\section{Experimento IV - Conjectura de Goldbach}
-Nesse experimento foi feita a comparação entre diferentes modos de escalonamento para a paralelização do algoritmo da conjectura de goldbach.
+\section{ Programação Híbrida - MPI + OpenMP\label{sec:ex03}}
+Nesse experimento, o programa descrito na seção \ref{sec:ex02a} foi adaptado para a paralelização em sistema de memória compartilhada, usando o OpenMP.
+Além do que já foi mencionado na seção \ref{sec:ex02a}, a imagem foi subdividida novamente, agora distribuindo as linhas entre as threads no laço mais externo dentro da função ``evolve''.
+Assim como no exercício anterior, o resultado da execução do algoritmo em um tabuleiro pré-definido de tamanho 1250x1250 também se iguala ao do algoritmo clássico, e as últimas 10 linhas e colunas são as mesmas da Figura \ref{fig:ex02}.
 
 
-A comparação de tempo de execução, speedup e eficiência para 1, 2 e 4 threads usando os diferentes tipos de escalonamento está disponível na Tabela \ref{tab:ex04}.
+Foram realizados 5 experimentos ao total, variando-se o número de threads, processos, distribuindo ou não o processo entre duas máquinas - os resultados estão na Tabela \ref{tab:ex03}.
 
 \begin{table}[htb!]
+  \centering
 	\begin{adjustbox}{max width=\linewidth}
-		\centering
-		\begin{tabular}{lllrrrr}%
-			\bfseries Escalonamento & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
-			\csvreader[]{tables/ex04.csv}{}
-			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-		\end{tabular}
+	\begin{tabular}{llllrrr}%
+		\bfseries Maquinas & \bfseries Proc. & \bfseries Thd./Proc. & \bfseries Total Thds & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia \\
+    1	& 1	& 1	& 1	& 18.712 & 1.000 & 1.000 \\
+    1	& 4	& 1	& 4	& 12.350 & 1.515 & 0.379 \\
+    2	& 8	& 1	& 8	& 30.653 & 0.610 & 0.076 \\
+    1	& 1	& 4	& 4	& 10.379 & 1.803 & 0.451 \\
+    2	& 2	& 4	& 8	& 14.392 & 1.300 & 0.163 \\
+	\end{tabular}
 	\end{adjustbox}
-	\caption{\label{tab:ex04}Avaliação do desempenho do algoritmo de contagem de números para 1, 2, 4, 8 e 12 threads.}
+	\caption{\label{tab:ex03}Avaliação do desempenho do jogo da vida com comunicação ponto-a-ponto e OpenMP, tabuleiro de tamanho 1250x1250.}
 \end{table}
 
-\begin{figure}[htb!]
-	\centering
+Avaliando os resultados, percebe-se um speedup positivo na maioria dos exemplos, porém, assim como no exercício anterior, quando 8 processos eram distribuidos entre as duas máquinas, a eficiência foi muito baixa, e o speedup foi menor do que 1.
 
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 0};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 1};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 2};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 3};
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex04.txt' index 4};
-	\legend{static 10, static 5, static 2, dynamic, guided};
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação do speedup do algoritmo de goldbach, para diferentes tipos de escalonamento e para 1, 2, 4, 8 e 12 Threads.
-		\label{fig:ex04-speedup}}
+Percebe-se também, que em geral a utilização do OpenMP favoreceu grandemente o desempenho se comparado ao MPI puro com número equivalente de threads. Esse resultado era esperado, pois o número de comunicações pela rede, e entre processos é mais lento que a comunicação entre as threads em um sistema de memória compartilhada.
+
+\section{Exercício da Maratona da WSCAD}
+Para esse exercício foi selecionado o problema D, que é o calculo do histograma de uma imagem. Foi feita então a paralelização do algoritmo utilizando MPI e OpenMP.  Neste programa, as linhas da imagem são divididas entre os processos, e dentro de cada processo o openmp é utilizado em duas ocasiões, por fim, uma operação de redução soma os histogramas de cada partição da imagem.
+
+O algoritmo inicialmente realiza uma quantização dos pixels, essa operação é paralelizada com ``omp parallel for'', distribuindo os pixels entre as diferentes threads.
+Em seguida, quatro laços aninhados são utilizados para contar ocorrências das 64 possíveis combinações de cores agora disponíveis, e embora o laço mais externo possua apenas quatro iterações, optei por paralelizá-lo, pois seriam utilizadas 4 threads no máximo.
+Outra opção seria paralelizar o laço interno, utilizando operações de redução para acumular o valor do contador de ocorrências.
+
+A imagem utilizada nos testes é a da Figura \ref{fig:ex04_1}, com  8960x8897 pixels - originalmente com 21MB no formato jpg, e após a conversão para PPM pelo Imagemagick passou a ter 229 MB.
+
+
+\begin{figure}[!htb]
+  \centering
+\includegraphics[width=0.4\textwidth] {small-image.jpg}
+\caption{M31 - Galáxia de andrômeda (Créditos: Hiromitsu Kohsaka/HSC Project/NAOJ) - Obtido em \url{http://subarutelescope.org/Topics/2014/09/08/index.html} .}
+\label{fig:ex04_1}
+\end{figure}
+
+ O resultado da execução do algoritmo foi conferido em todos os testes, e o histograma obtido é o mesmo da Figura \ref{fig:ex04_2}.
+
+\begin{figure}[!htb]
+  \begin{adjustbox}{max width=\linewidth}
+	\begin{BVerbatim}
+0.832 0.032 0.000 0.000 0.000 0.009 0.001 0.000 0.000 0.000 0.000 0.000
+0.000 0.000 0.000 0.000 0.002 0.009 0.000 0.000 0.000 0.061 0.005 0.000
+0.000 0.000 0.001 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+0.000 0.005 0.004 0.000 0.000 0.001 0.023 0.003 0.000 0.000 0.000 0.001
+0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+0.000 0.000 0.000 0.009
+  \end{BVerbatim}
+  \end{adjustbox}
+\caption{Histograma da Figura \ref{fig:ex04_1}.}
+\label{fig:ex04_2}
 \end{figure}
 
 
-\section{Experimento V - Jogo da Vida}
-Nesse experimento foi implementada a paralelização de um algoritmo do jogo da vida.
-Para 1, 2 e 4 threads foi possível identificar que a solução permanece a mesma, em um tabuleiro de tamanho 1000x1000.
+Assim como na seção \ref{sec:ex03}, foram realizados 5 experimentos ao total, variando-se o número de threads, processos, distribuindo ou não o processo entre duas máquinas. Os resultados da execução do programa sobre a Figura \ref{fig:ex04_1} estão na Tabela \ref{tab:ex04}.
+
 
 \begin{table}[htb!]
+  \centering
 	\begin{adjustbox}{max width=\linewidth}
-		\centering
-		\begin{tabular}{lllrrrr}%
-			\bfseries Tamanho & \bfseries Threads & \bfseries Tempo(s) & \bfseries Cache Miss & \bfseries Speedup & \bfseries Eficiencia
-			\csvreader[]{tables/ex05.csv}{}
-			{\\ \csvcoli & \csvcolii & \csvcoliii & \csvcoliv & \csvcolv & \csvcolvi}
-		\end{tabular}
+	\begin{tabular}{llllrrr}%
+		\bfseries Maquinas & \bfseries Proc. & \bfseries Thd./Proc. & \bfseries Total Thds & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia \\
+    1	& 1	& 1	& 1	& 18.712 & 1.000 & 1.000 \\
+    1	& 4	& 1	& 4	& 12.350 & 1.515 & 0.379 \\
+    2	& 8	& 1	& 8	& 30.653 & 0.610 & 0.076 \\
+    1	& 1	& 4	& 4	& 10.379 & 1.803 & 0.451 \\
+    2	& 2	& 4	& 8	& 14.392 & 1.300 & 0.163 \\
+	\end{tabular}
 	\end{adjustbox}
-	\caption{\label{tab:ex05}Avaliação do desempenho do algoritmo de contagem de números para 1, 2, 4, 8 e 12 threads.}
+	\caption{\label{tab:ex04}Avaliação do desempenho do cálculo do histograma, com comunicação ponto-a-ponto e OpenMP, para uma imagem colorida de 8960x8897 pixels.}
 \end{table}
-
-\begin{figure}[htb!]
-	\centering
-
-	\begin{tikzpicture}
-	\begin{axis}[xlabel={Threads}, ylabel={Speedup}, legend pos=north west]
-	\addplot gnuplot [raw gnuplot] {plot 'plots/ex05.txt' index 0};
-	\end{axis}
-	\end{tikzpicture}
-	\caption{Comparação do speedup do algoritmo do jogo da vida para 1, 2, 4, 8 e 12 Threads.
-		\label{fig:ex05-speedup}}
-\end{figure}
 
 \bibliographystyle{IEEEtran}
 

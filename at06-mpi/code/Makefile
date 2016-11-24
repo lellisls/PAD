@@ -1,19 +1,20 @@
 
-# FLAGS = -np <processos> -hostfile <arq.marquinas.txt> --prefix /opt/mpi2
 
-CXX=/usr/lib64/openmpi/bin/mpicc
-MPIRUN=/usr/lib64/openmpi/bin/mpirun
+CXX=mpicc
+MPIRUN=mpirun
 MPIRUN_FLAGS =-np 6
-MPIRUN_FLAGS_OMP =-np 1 
-#--bind-to none
+MPIRUN_FLAGS_OMP =-np 1
 MPIRUN_PREFIX=
-monkey ?= 0
 CFLAGS+= -lm -O3
+
+numthds ?= 1
+
+monkey ?= 0
 ifneq ($(monkey), 0)
 	CXX=/opt/mpi2/bin/mpicc
 	MPIRUN=/opt/mpi2/bin/mpirun
 	MPIRUN_FLAGS =-np 14 -hostfile maquinas.txt
-	MPIRUN_FLAGS_OMP =-np 3 -hostfile maquinas-omp.txt 
+	MPIRUN_FLAGS_OMP =-np 3 -hostfile maquinas-omp.txt
 	MPIRUN_PREFIX = --prefix /opt/mpi2/
 	CFLAGS+= -DBOARDSIZE=2000
 endif
@@ -25,19 +26,19 @@ stats: clean
 
 ex02-a: stats
 	${CXX} -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
-	time ${MPIRUN} ${MPIRUN_FLAGS} bin/$@ ${MPIRUN_PREFIX}
+	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex02-b: stats
 	${CXX} -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
-	time ${MPIRUN} ${MPIRUN_FLAGS} bin/$@ ${MPIRUN_PREFIX}
+	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex03: stats
-	${CXX} -fopenmp -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
-	time ${MPIRUN} ${MPIRUN_FLAGS_OMP} bin/$@ ${MPIRUN_PREFIX}
+	${CXX} -fopenmp -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS) -DNUMTHDS=${numthds}
+	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex04: stats
-	${CXX}  -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
-	# ${MPIRUN} ${MPIRUN_FLAGS} bin/$@ ${MPIRUN_PREFIX}
+	${CXX} -fopenmp -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS) -DNUMTHDS=${numthds}
+	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex04-test1: ex04
 	cat histogram.in | time ${MPIRUN} ${MPIRUN_FLAGS} bin/ex04 ${MPIRUN_PREFIX}

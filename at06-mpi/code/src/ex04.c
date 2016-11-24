@@ -6,6 +6,10 @@
 
 #define RGB_COMPONENT_COLOR 255
 
+#ifndef NUMTHDS
+#define NUMTHDS 1
+#endif
+
 typedef struct {
   unsigned char red, green, blue;
 } PPMPixel;
@@ -20,7 +24,7 @@ static PPMImage* readPPM( ) {
   PPMImage *img;
   FILE *fp;
   int c, rgb_comp_color;
-  fp = stdin;
+  fp = fopen("large-image.ppm","r");
   if( !fgets( buff, sizeof( buff ), fp ) ) {
     perror( "stdin" );
     exit( 1 );
@@ -74,9 +78,10 @@ void Histogram( PPMImage *image, float *h, int globalSize ) {
   int n = image->y * image->x;
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
-  printf( "%d: %d\n", rank, n );
+  printf( "%d: %dx%d\n", rank, image->x, image->y );
   cols = image->x;
   rows = image->y;
+  #pragma omp parallel for
   for( i = 0; i < n; i++ ) {
     image->data[ i ].red = floor( ( image->data[ i ].red * 4 ) / 256 );
     image->data[ i ].blue = floor( ( image->data[ i ].blue * 4 ) / 256 );
@@ -84,18 +89,19 @@ void Histogram( PPMImage *image, float *h, int globalSize ) {
   }
   count = 0;
   x = 0;
+  // #pragma omp parallel for private(count, x, j, k, l) shared(image, globalSize, h)
   for( j = 0; j <= 3; j++ ) {
     for( k = 0; k <= 3; k++ ) {
       for( l = 0; l <= 3; l++ ) {
-#pragma omp parallel for firstprivate(j, k, l) shared(image) reduction(+:count)
+        x = j * 16 + k * 4 + l;
+        count = 0;
         for( i = 0; i < n; ++i ) {
           if( ( image->data[ i ].red == j ) && ( image->data[ i ].green == k ) && ( image->data[ i ].blue == l ) ) {
             count++;
           }
         }
         h[ x ] = ( float ) count / globalSize;
-        count = 0;
-        x++;
+        // x++;
       }
     }
   }
@@ -108,24 +114,21 @@ int main( int argc, char *argv[] ) {
   MPI_Init( &argc, &argv );
   MPI_Comm_size( MPI_COMM_WORLD, &commSize );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-  MPI_Datatype pixelType, oldtypes;
-  int blockcounts;
-  MPI_Aint offsets, extent;
+  MPI_Datatype pixelType;
 
-  offsets = 0;
-  oldtypes = MPI_INT;
-  blockcounts = 3;
+  omp_set_num_threads(NUMTHDS);
+
+  MPI_Type_contiguous(3, MPI_CHAR, &pixelType);
+
 
   localImage = (PPMImage*) malloc(sizeof(PPMImage));
-
-  MPI_Type_create_struct( 1, &blockcounts, &offsets, &oldtypes, &pixelType );
   MPI_Type_commit( &pixelType );
   if( rank == 0 ) {
     image = readPPM( );
     xsz = image->x;
     ysz = image->y;
     n = xsz * ysz;
-    printf("%d x %d\n", xsz, ysz);
+    printf("Input image size: %d x %d\n", xsz, ysz);
     for( iRank = 0; iRank < commSize; ++iRank ) {
       int rows = floor( ( float ) ysz / commSize );
       int first = iRank * rows * xsz;
@@ -134,31 +137,44 @@ int main( int argc, char *argv[] ) {
       }
       int pixels = rows * xsz;
       int last = first + pixels;
+      printf( "Sending data to %d: %d x %d, %d pixels --- %d -> %d\n", iRank, xsz, rows, pixels, first, last );
       if( iRank == 0 ){
         localImage->x = xsz;
         localImage->y = rows;
         localImage->data = image->data;
       }else{
         int localSize[2] = { xsz, rows};
-        printf( "%d: %d x %d, %d pixels --- %d -> %d\n", iRank, xsz, rows, pixels, first, last );
+        printf("Sending n to %d: %d\n", iRank, n);
         MPI_Send( &n, 1, MPI_INT, iRank, 100, MPI_COMM_WORLD );
+        printf("Sending localSize to %d: %dx%d\n", iRank, localSize[0], localSize[1]);
         MPI_Send( &localSize[ 0 ], 2, MPI_INT, iRank, 101, MPI_COMM_WORLD );
+        printf("Sending image to %d: %d pixels\n", iRank, pixels);
+        PPMPixel * data = image->data;
         if(rows != 0){
-          MPI_Send( &image->data[ first ], pixels, pixelType, iRank, 102, MPI_COMM_WORLD );
+          MPI_Send( &data[ first ], pixels, pixelType, iRank, 102, MPI_COMM_WORLD );
         }
       }
     }
   }
   else {
     MPI_Recv( &n, 1, MPI_INT, 0, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-    MPI_Recv( &localImage->x, 2, MPI_INT, 0, 101, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    printf("%d:  1st receive: %d\n", rank, n);
+    int localSize[2];
+    MPI_Recv( &localSize[0], 2, MPI_INT, 0, 101, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    printf("%d:  2nd receive: %dx%d\n", rank, localSize[0], localSize[1]);
+    localImage->x = localSize[0];
+    localImage->y = localSize[1];
     xsz = localImage->x; ysz = localImage->y;
     localImage->data = ( PPMPixel* ) malloc( xsz * ysz * sizeof( PPMPixel ) );
+    PPMPixel * data = localImage->data;
+    printf("%d:  Expecting to receive %d pixels\n", rank, xsz * ysz);
     if(ysz != 0){
-      printf("Local image size: %d X %d\n", xsz, ysz);
-      MPI_Recv( &localImage->data[ 0 ], xsz * ysz , pixelType, 0, 102, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+      MPI_Recv( &data[ 0 ], xsz * ysz , pixelType, 0, 102, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
     }
+    printf("%d:  3rd receive: %d", rank, xsz * ysz);
   }
+  printf("%d:   Local image size: %d X %d\n", rank, localImage->x, localImage->y);
+  MPI_Barrier(MPI_COMM_WORLD);
   float *h = ( float* ) malloc( sizeof( float ) * 64 );
   for( i = 0; i < 64; i++ ) {
     h[ i ] = 0.0;
