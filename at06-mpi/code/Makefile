@@ -26,19 +26,15 @@ stats: clean
 
 ex02-a: stats
 	${CXX} -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
-	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex02-b: stats
 	${CXX} -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS)
-	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex03: stats
 	${CXX} -fopenmp -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS) -DNUMTHDS=${numthds}
-	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex04: stats
 	${CXX} -fopenmp -Iinc -o obj/$@.o src/${@}.c -o bin/$@ -lm $(CFLAGS) -DNUMTHDS=${numthds}
-	# bash sendfiles.sh hostfiles/maquinas-all.txt bin/$@ /tmp/$@
 
 ex04-test1: ex04
 	cat histogram.in | time ${MPIRUN} ${MPIRUN_FLAGS} bin/ex04 ${MPIRUN_PREFIX}

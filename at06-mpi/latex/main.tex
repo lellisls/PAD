@@ -98,7 +98,7 @@ Foram implementadas duas versões do algoritmo ``Jogo da Vida'' utilizando MPI, 
 
 Em ambos os exemplos, o resultado da execução do algoritmo em um tabuleiro pré-definido de tamanho 1250x1250, na Figura \ref{fig:ex02} uma representação das 10 últimas linhas e colunas do canto inferior direito após o final da execução do algoritmo.
 
-\textit{ Obs. A implementação do algoritmo com comunicação ponto-a-ponto poderia ter sido otimizada caso fosse feito uma troca entre os ponteiros ``aux'' e ``localdata'', mas essa otimização não era possível no segundo exemplo, então teve que ser descartada para tornar a comparação entre os dois mais justa. }
+\textit{ Obs. A implementação do algoritmo com comunicação ponto-a-ponto poderia ter sido otimizada caso fosse feita uma troca entre os ponteiros ``aux'' e ``localdata'', mas essa otimização não era possível no segundo exemplo, então teve que ser descartada para tornar a comparação entre os dois mais justa. }
 
 
 \begin{figure}[!htb]
@@ -217,7 +217,9 @@ Avaliando os resultados, percebe-se um speedup positivo na maioria dos exemplos,
 Percebe-se também, que em geral a utilização do OpenMP favoreceu grandemente o desempenho se comparado ao MPI puro com número equivalente de threads. Esse resultado era esperado, pois o número de comunicações pela rede, e entre processos é mais lento que a comunicação entre as threads em um sistema de memória compartilhada.
 
 \section{Exercício da Maratona da WSCAD}
-Para esse exercício foi selecionado o problema D, que é o calculo do histograma de uma imagem. Foi feita então a paralelização do algoritmo utilizando MPI e OpenMP.  Neste programa, as linhas da imagem são divididas entre os processos, e dentro de cada processo o openmp é utilizado em duas ocasiões, por fim, uma operação de redução soma os histogramas de cada partição da imagem.
+Para esse exercício foi selecionado o problema D, que é o calculo do histograma de uma imagem. Foi feita então a paralelização do algoritmo utilizando MPI e OpenMP.
+
+Neste programa usamos MPI, de forma que o processo 0 lê a imagem e distribui as linhas entre os processos de forma assíncrona (MPI_Isend), cada processo realiza o cálculo do histograma independentemente com o OpenMP. Por fim operação de redução do MPI soma os histogramas de cada partição da imagem.
 
 O algoritmo inicialmente realiza uma quantização dos pixels, essa operação é paralelizada com ``omp parallel for'', distribuindo os pixels entre as diferentes threads.
 Em seguida, quatro laços aninhados são utilizados para contar ocorrências das 64 possíveis combinações de cores agora disponíveis, e embora o laço mais externo possua apenas quatro iterações, optei por paralelizá-lo, pois seriam utilizadas 4 threads no máximo.
@@ -259,15 +261,17 @@ Assim como na seção \ref{sec:ex03}, foram realizados 5 experimentos ao total, 
 	\begin{adjustbox}{max width=\linewidth}
 	\begin{tabular}{llllrrr}%
 		\bfseries Maquinas & \bfseries Proc. & \bfseries Thd./Proc. & \bfseries Total Thds & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia \\
-    1	& 1	& 1	& 1	& 18.712 & 1.000 & 1.000 \\
-    1	& 4	& 1	& 4	& 12.350 & 1.515 & 0.379 \\
-    2	& 8	& 1	& 8	& 30.653 & 0.610 & 0.076 \\
-    1	& 1	& 4	& 4	& 10.379 & 1.803 & 0.451 \\
-    2	& 2	& 4	& 8	& 14.392 & 1.300 & 0.163 \\
+    1	& 1	& 1	& 1	& 4.234	 & 1.000 & 1.000 \\
+    1	& 4	& 1	& 4	& 2.601	 & 1.628 & 0.407 \\
+    2	& 8	& 1	& 8	& 12.818 & 0.330 & 0.041 \\
+    1	& 1	& 4	& 4	& 4.228	 & 1.001 & 0.250 \\
+    2	& 2	& 4	& 8	& 15.339 & 0.276 & 0.035 \\
 	\end{tabular}
 	\end{adjustbox}
 	\caption{\label{tab:ex04}Avaliação do desempenho do cálculo do histograma, com comunicação ponto-a-ponto e OpenMP, para uma imagem colorida de 8960x8897 pixels.}
 \end{table}
+
+Ao analisar os resultados da Tabela \ref{tab:ex04}, percebemos que a utilização do OpenMP sozinha foi muito mais eficiente que as alternativas com MPI, inclusive MPI híbrido. Isso se deve ao grande volume de dados que precisa ser enviado pela rede, e possivelmente pelas próprias limitações da rede, o tráfego na rede identificado pelo ``gnome-system-monitor'' chegou ao pico de 100Mbps, e assim o tempo de execução poderia ser reduzido consideravelmente em uma rede gigabit.
 
 \bibliographystyle{IEEEtran}
 
