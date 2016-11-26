@@ -9,6 +9,19 @@
 #define T 0.01
 #define kappa 0.000045
 
+__global__ void Inicializacao( double *uprev, const int n ) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  double x = idx * dx;
+  if( idx < n + 1 ) {
+    if( x <= 0.5 ) {
+      uprev[ idx ] = 200 * x;
+    }
+    else {
+      uprev[ idx ] = 200 * ( 1. - x );
+    }
+  }
+}
+
 __global__ void Atualiza( double *u, double *u_prev, const int n ) {
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if( idx == 0 ) {
@@ -45,7 +58,6 @@ __global__ void Maximo( double *input, double *results, int n ) {
 int main( void ) {
 
   double *tmp;
-  double *u_prev;
   double *u_prev_d, *u_d, *max_d;
   double t;
   long int n;
@@ -56,11 +68,9 @@ int main( void ) {
   int gridSize = ceil( n / ( float ) blockSize );
   printf( "Size: %d, numBlks: %d, numThds: %d, mult: %d\n", n, gridSize, blockSize, gridSize * blockSize );
 
-  u_prev = ( double* ) malloc( ( n + 1 ) * sizeof( double ) );
-
   cudaMalloc( ( void** ) &u_d, ( n + 1 ) * sizeof( double ) );
   cudaMalloc( ( void** ) &u_prev_d, ( n + 1 ) * sizeof( double ) );
-  cudaMalloc( ( void** ) &max_d, (gridSize + 1 )* sizeof( float )  * sizeof( double ) );
+  cudaMalloc( ( void** ) &max_d, (gridSize + 1 ) * sizeof( double ) );
 
   printf( "Inicio: qtde=%ld, dt=%g, dx=%g, dx²=%g, kappa=%f, const=%f\n",
           ( n + 1 ), dt, dx, dx * dx, kappa, kappa * dt / ( dx * dx ) );
@@ -68,21 +78,7 @@ int main( void ) {
 
   double start = omp_get_wtime( );
 
-  double x = 0.;
-  for( int i = 0; i < n + 1; i++ ) {
-    if( x <= 0.5 ) {
-      u_prev[ i ] = 200 * x;
-    }
-    else {
-      u_prev[ i ] = 200 * ( 1. - x );
-    }
-    x += dx;
-  }
-  double start_copy1 = omp_get_wtime( );
-
-  cudaMemcpy( u_prev_d, u_prev, sizeof( double ) * (n + 1), cudaMemcpyHostToDevice );
-
-  printf( "\tHostToDevice : %f\n", omp_get_wtime( ) - start_copy1 );
+  Inicializacao <<< gridSize, blockSize >>> ( u_prev_d, n );
   printf( "\tInicializacao: %f\n", omp_get_wtime( ) - start );
 
   /* cudaMemcpy( u_prev, u_prev_d, ( n + 1 ) * sizeof( double ), cudaMemcpyDeviceToHost ); */
@@ -102,29 +98,19 @@ int main( void ) {
    */
 
   t = 0.;
-
-  double start_kernel = omp_get_wtime( );
-  int steps = 0;
   while( t < T ) {
-    Atualiza << < gridSize, blockSize >> > ( u_d, u_prev_d, n );
+    Atualiza <<< gridSize, blockSize >>> ( u_d, u_prev_d, n );
     tmp = u_prev_d; u_prev_d = u_d; u_d = tmp; /* troca entre ponteiros */
     t += dt;
-    ++steps;
   }
-  double totalKernel = omp_get_wtime( ) - start_kernel;
-  printf( "\tTempo kernels: %f \n", totalKernel );
-  printf( "\tTempo medio  : %f \n", totalKernel / steps );
-
   int smem_sz = blockSize * sizeof( double );
-  Maximo << < gridSize, blockSize, smem_sz >> > ( u_d, max_d, n );
-  Maximo << < 1, blockSize, smem_sz >> > ( max_d, max_d + gridSize, gridSize );
+  Maximo <<< gridSize, blockSize, smem_sz >>> ( u_d, max_d, n );
+  Maximo <<< 1, blockSize, smem_sz >>> ( max_d, max_d + gridSize, gridSize );
 
   double maxval;
-  double start_copy2 = omp_get_wtime( );
   cudaMemcpy( &maxval, max_d + gridSize, sizeof( double ), cudaMemcpyDeviceToHost );
-  printf( "\tTempo transf : %f \n", omp_get_wtime( ) - start_copy2 );
-  printf( "\tTempo Total  : %f \n", omp_get_wtime( ) - start );
+  printf( "\tTempo total  : %f \n", omp_get_wtime( ) - start );
 
   printf( "Maior valor = %g\n", maxval );
-
+  return 0;
 }

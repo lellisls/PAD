@@ -66,7 +66,7 @@ int main( void ) {
       maxloc = i;
     }
   }
-  printf( "Tempo: \t %f \n", omp_get_wtime( ) - start );
+  printf( "\tTempo total : \t %f \n", omp_get_wtime( ) - start );
   printf( "Maior valor u[%ld] = %g\n", maxloc, u[ maxloc ] );
   return( 0 );
 }
