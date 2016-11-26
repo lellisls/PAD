@@ -11,8 +11,8 @@ int main( void ) {
 
   data = (float *) malloc( n * sizeof( float ) );
   double start = omp_get_wtime();
-
-  for(int i = 0; i < n; ++i){
+  int i;
+  for( i = 0; i < n; ++i){
     data[ i ] = rand() / 1000.0f;
   }
 
