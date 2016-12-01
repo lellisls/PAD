@@ -1,3 +1,6 @@
+Atividade 6 - Exercícios em MPI
+---
+
 ## Ex01
 Relate brevemente as novidades existentes no padrão **MPI-3** (ou 3.1).
 Destaque as **principais novas funcionalidades**, destacando o uso com dispositivos de **memória compartilhada**.
