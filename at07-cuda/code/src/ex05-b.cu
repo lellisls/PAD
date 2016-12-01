@@ -4,7 +4,7 @@
 // #include "stats.h"
 #include "stdio.h"
 #include "stdlib.h"
-
+#define SIZE 1000
 __global__ void Evolve( int *val, int *aux, int n ) {
   int up, upright, right, rightdown, down, downleft, left, leftup;
   int sum = 0, estado;
@@ -58,7 +58,7 @@ void print( int *val, int n, int start, int end ) {
 }
 
 int main( int argc, char const *argv[] ) {
-  int n = 500, steps, size;
+  int n = SIZE, steps, size;
   if( argc > 1 )
     n = atoi( argv[ 1 ] );
   size = n * n;
