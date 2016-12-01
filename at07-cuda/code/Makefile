@@ -25,6 +25,8 @@ ex04: clean
 ex05: clean
 	nvcc $(CCOPTS) -Iinc src/${@}.cu -o bin/$@ $(CFLAGS)
 	bin/$@
+	nvcc $(CCOPTS) -Iinc src/${@}-b.cu -o bin/$@ $(CFLAGS)
+	bin/$@
 	gcc -fopenmp -Iinc src/${@}.c -o bin/$@ $(CFLAGS)
 	bin/$@
 
