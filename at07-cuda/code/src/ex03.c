@@ -17,5 +17,5 @@ int main( void ) {
   }
 
   printf( "\tTempo Total  : %f \n", omp_get_wtime( ) - start );
-
+  return 0;
 }

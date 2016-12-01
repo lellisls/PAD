@@ -11,10 +11,10 @@ __global__ void Random( float *results, long int n, unsigned int seed ) {
   curandState_t state;
 
   curand_init(seed, blockIdx.x, 0, &state);
-  // results[ idx ] = curand(&state) / 1000.0f;
-  if( idx < n ){
-    results[ idx ] = 1.0;
-  }
+  results[ idx ] = curand(&state) / 1000.0f;
+  // if( idx < n ){
+  //   results[ idx ] = 1.0;
+  // }
 }
 
 __global__ void Somatorio( float *input, float *results, long int n ) {

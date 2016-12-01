@@ -22,7 +22,7 @@ int main( void ) {
   int blockSize = 256;
   int numBlocks = ceil( n / ( float ) blockSize );
   int realsize = numBlocks * blockSize;
-  printf( "Size: %d, numBlks: %d, numThds: %d, mult: %d\n", n, numBlocks, blockSize, realsize);
+  printf( "Size: %ld, numBlks: %d, numThds: %d, mult: %d\n", n, numBlocks, blockSize, realsize);
 
   cudaMalloc( ( void** ) &data_d, realsize * sizeof( float ) );
   double start = omp_get_wtime();
@@ -30,5 +30,5 @@ int main( void ) {
   Random<<< numBlocks, blockSize >>> ( data_d, n, time(NULL));
 
   printf( "\tTempo Total  : %f \n", omp_get_wtime( ) - start );
-
+  return 0;
 }
