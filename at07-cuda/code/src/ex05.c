@@ -3,6 +3,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+#define SIZE 1000
+
 void evolve( int *val, int *aux, int n ) {
   int up, upright, right, rightdown, down, downleft, left, leftup;
   int sum = 0, estado, i, j, inj;
@@ -58,7 +60,7 @@ void print( int *val, int n, int start, int end ) {
 }
 
 int main( int argc, char const *argv[] ) {
-  int n = 1000, steps, size;
+  int n = SIZE, steps, size;
   if( argc > 1 )
     n = atoi( argv[ 1 ] );
   size = n * n;
