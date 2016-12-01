@@ -11,7 +11,7 @@ __global__ void Random( float *results, long int n, unsigned int seed ) {
   curandState_t state;
 
   curand_init(seed, blockIdx.x, 0, &state);
-  results[ idx ] = curand(&state) / 1000.0f;
+  results[ idx ] = (float)curand(&state) / 1000.0f;
   // if( idx < n ){
   //   results[ idx ] = 1.0;
   // }
@@ -41,7 +41,7 @@ float sum(float *data_d, size_t n) {
   int blockSize = 1024, gridSize = ceil( n / ( float ) blockSize );
   float * sums_d;
 
-  printf( "Size: %d, numBlks: %d, numThds: %d, mult: %d\n", n, gridSize, blockSize, blockSize * gridSize );
+  printf( "Size: %ld, numBlks: %d, numThds: %d, mult: %d\n", n, gridSize, blockSize, blockSize * gridSize );
 
   cudaMalloc( ( void** ) &sums_d, (gridSize + 1 ) * sizeof( float )  );
 
@@ -61,7 +61,7 @@ int main( void ) {
   int blockSize = 1024;
   int gridSize = ceil( n / ( float ) blockSize );
   int realsize = gridSize * blockSize;
-  printf( "Size: %d, numBlks: %d, numThds: %d, mult: %d\n", n, gridSize, blockSize, realsize);
+  printf( "Size: %ld, numBlks: %d, numThds: %d, mult: %d\n", n, gridSize, blockSize, realsize);
 
   cudaMalloc( ( void** ) &data_d, realsize * sizeof( float ) );
 

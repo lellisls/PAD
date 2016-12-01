@@ -4,7 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{cite}
 \ifCLASSINFOpdf
-  \usepackage[pdftex]{graphicx}
+\usepackage[pdftex]{graphicx}
   % declare the path(s) where your graphic files are
   % \graphicspath{{../pdf/}{../jpeg/}}
   % and their extensions so you won't have to specify these with
@@ -14,7 +14,7 @@
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
   % driver is specified.
-  \usepackage[dvips]{graphicx}
+\usepackage[dvips]{graphicx}
   % declare the path(s) where your graphic files are
   % \graphicspath{{../eps/}}
   % and their extensions so you won't have to specify these with
@@ -52,10 +52,10 @@
 
 \begin{document}
 \title{Programação de Alto Desempenho\\
-\large Atividade 7 - Programação CUDA}
+\large Atividade 7 --- Programação CUDA}
 
-\author{\IEEEauthorblockN{Lucas Santana Lellis - 69618}
-\IEEEauthorblockA{PPGCC - Instituto de Ciência e Tecnologia\\
+\author{\IEEEauthorblockN{Lucas Santana Lellis --- 69618}
+\IEEEauthorblockA{PPGCC --- Instituto de Ciência e Tecnologia\\
 	Universidade Federal de São Paulo} }
 
 % make the title area
@@ -64,42 +64,116 @@
 %\IEEEpeerreviewmaketitle
 
 \section{Introdução}
-Nesta atividade foram realizados experimentos utilizando 
-Cada experimento foi realizado 3 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles, sendo calculado o speedup pela fórmula $$speedup(P) = {{\textrm{Tempo para 1 thread} }\over{\textrm{Tempo para P threads} }}$$ e a eficiência pela fórmula $$eficiencia(P) = {{speedup(P)}\over{P}}$$
+Nesta atividade foram realizados experimentos com programação CUDA para placas aceleradoras.
+Cada experimento foi realizado 3 vezes, e os resultados apresentados são a média dos resultados obtidos em cada um deles, sendo calculado o speedup em comparação à execução em CPU.
+As especificações da máquina utilizada estão disponíveis na Tabela\ref{tab:cpu}.
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{ll|ll}
+\bfseries CPU & Intel i7 990X & \bfseries Cores & 6\\
+\bfseries Threads & 12 & \bfseries Clock & 3.47 GHz\\
+\bfseries Cache& 12 MB  &\bfseries RAM & 20 GB \\
+\bfseries SO & Ubuntu 14.04 & \bfseries Kernel & 3.13.0 \\
+\bfseries GPU & Tesla K40 & \bfseries Threads & 2880 \\
+\bfseries Mem. & 12Gb GDDR5 &\bfseries CUDA Cap. & 3.5 \\
+\bfseries GCC & 4.8.5 & \bfseries NVCC & V7.5.17
+\end{tabular}
+\caption{Especificações da Máquina\label{tab:cpu}}
+\end{table}
+
+\section{Exercício I --- Difusão de calor\label{sec01}}
+Neste exercício foi feita a paralelização em CUDA do algoritmo da difusão de calor em um domínio unidimensional através de diferenças finitas.
+
+Foram implementados dois kernels, um para a transmissão de calor, chamado ``Atualiza'', e um para a operação de redução que retorna o valor máximo no vetor, chamado ``Maximo'', em uma versão alternativa, a inicializacao do vetor também é paralelizada pelo kernel ``Inicializacao''.
+
+Alguns recursos do algoritmo original não foram implementados em CUDA, como o cálculo de $x$, que acumulava $dx$ à cada iteração. Além disso, a operação de redução ``Maximo'' apenas retorna o maior valor, ignorando a posição do maior valor do vetor. De qualquer forma, em ambas implementações o resultado obtido é o mesmo: $99.8486$.
+
+No algoritmo em CUDA, foram obtidos os tempos da tabela\ref{tab:ex01-cuda}, onde \textit{HostToDevice} é o tempo de transmissão do vetor da memória local para a placa aceleradora, \textit{Tempo kernels} é o tempo total da execução da etapa de transmissão de calor, em que são feitas chamadas sucessivas do kernel ``Atualiza'', \textit{Tempo medio} é o tempo médio da execução dos kernels, \textit{DeviceToHost} é o tempo de transmissão da saída da operação de redução para a CPU, e finalmente o \textit{Tempo Total} é o tempo total da execução do algoritmo.
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{rl}
+\bfseries HostToDevice: & 0.000165 \\
+\bfseries Tempo kernels: & 0.112622 \\
+\bfseries Tempo medio: & 0.000011 \\
+\bfseries DeviceToHost: & 0.012765 \\
+\bfseries Tempo Total: & 0.125966 \\
+\end{tabular}
+\caption{Tempos obtidos na execução CUDA.\label{tab:ex01-cuda}}
+
+\end{table}
+
+Agora, na Tabela \ref{tab:ex01-cpu} é feita a comparação entre a execução em CPU e em GPU. O speedup da operação foi de 10 vezes se comparado à execução em apenas uma thread na CPU.
 
 
-Foram utilizados dois computadores, um desktop (i5-3470, 4 cores, 4 threads, 8Gb RAM DDR3) e um notebook (i5-3210M, 2 cores, 4 threads, 6Gb RAM DDR3), ambos com Fedora 25 x86\_64, kernel 4.8.8, GCC 6.2.1 e MPICH 3.2. Todos os programas foram feitos em C, com otimização -O3.
+\begin{table}[htb!]
+\centering
+\begin{tabular}{rl}
+  \bfseries CPU & 1.34425 \\
+  \bfseries GPU & 0.125966 \\
+  \bfseries CPU/GPU & 10.671530 \\
+\end{tabular}
+\caption{Comparação da execução em CUDA vs CPU.\label{tab:ex01-cpu}}
+\end{table}
+
+\section{Exercício II --- nvprof e nvvp\label{sec:ex02}}
+Neste exercício utilizei o nvprof e nvvp para analisar a execução do exercício da seção\ref{sec01}. Na Figura\ref{fig:nvvp} está a saída do nvvp, e na Figura\ref{fig:nvprof} um resumo da saída do nvprof, com os argumentos ``nvprof --print-gpu-trace bin/ex01 ''.
+
+\begin{figure*}
+  \centering
+\includegraphics[width=\textwidth] {figs/nvvp}
+\caption{Saída do NVVP sobre o programa em CUDA da Seção\ref{sec01}.}
+\label{fig:nvvp}
+\end{figure*}
+
+Uma análise mais profunda da Figura\ref{fig:nvprof} revela algumas informações interessantes:
+A transmissão dos dados iniciais para o dispositivo durou 136.39us, sendo enviados 781.25KB a uma taxa de 5.4629GB/s;
+Foram realizadas 50000 chamadas do kernel ``Atualiza'', cada uma durando em torno de 9us;
+A operação de redução ``Maximo'' em duas etapas, a primeira com 16us e a segunda com 4us;
+Por fim, a cópia do resultado da redução que durou 3us para enviar 8 bytes à memória principal.
+
+\section{Exercício III --- Numeros Aleatorios\label{sec:ex03}}
+Nesse exercício foi implementado um kernel em CUDA para preencher um vetor com números aleatórios do tipo float utilizando a função ``cuRand''.
+Neste exemplo, não foi necessário separar a etapa de atribuição das sementes da etapa de obtenção do número aleatório, uma vez que a utilização da função cuRand é realizada em apenas uma etapa em todo o código.
+
+Foi feita uma implementação da mesma operação, utilizando a função ``rand'' para gerar um vetor de números aleatorios na CPU.
+A comparação entre os tempos de execução está na Tabela\ref{tab:ex03}, e vemos que o speedup foi de 20 vezes com relação á execução em CPU com apenas uma thread.
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{rl}
+  \bfseries CPU & 0.010963 \\
+  \bfseries GPU & 0.000534 \\
+  \bfseries CPU/GPU & 20.529962\\
+\end{tabular}
+\caption{Comparação da execução em CUDA vs CPU.\label{tab:ex03}}
+\end{table}
+
+\section{Exercício IV --- Somatorio de Nros. Aleatorios}
+Utilizando o código do exercício da Seção\ref{sec:ex03}, o exercício atual compreende no somatório dos valores de um vetor preenchido com números aleatórios. Trata-se também de uma operação de redução em CUDA, realizada de forma semelhante à Seção \ref{sec:ex02}.
+
+Um teste simples para somar um vetor de 1000000 posições com apenas o valor 1 foi suficiente para revelar uma deficiência nessa abordagem de redução utilizada, pois o valor obtido era muito inferior ao esperado.
+Logo, chegamos à conclusão que a utilização dessa função de redução para vetores com muitos elementos e blocos de tamanho fixo poderia causar resultados inconsistentes, e que para que a função de redução funcione corretamente é necessário que a chamada dos kernels seja feita com número de trheads superior ao número de blocos.
 
 
-\section{Exercício I- Novidades do MPI 3}
+Assim, foi feita uma comparação do tempo de execução da mesma operação em CPU e em GPU (CUDA), e os resultados estão na Tabela\ref{tab:ex04}. Como pode-se ver, o speedup foi de 21 vezes com relação à execução em CPU em uma só thread.
 
-O MPI 3 é padrão mais recente do MPI, e uma das suas maiores novidades é o suporte à sistemas de memória compartilhada, diminuindo a necessidade de utilização de pthreads ou OpenMP, assim como novidades em comunicação "One-Sided" e operações coletivas. Abaixo, algumas das mudanças mais relevantes:
+\begin{table}[htb!]
+\centering
+\begin{tabular}{rl}
+  \bfseries CPU & 0.000612 \\
+  \bfseries GPU & 0.013140 \\
+  \bfseries CPU/GPU & 21.470588235\\
+\end{tabular}
+\caption{Comparação da execução em CUDA vs CPU.\label{tab:ex04}}
+\end{table}
 
-\subsection{Operações Coletivas Não-bloqueantes}
-Operações coletivas não bloqueantes, como as funções ``MPI\_Ibcast'' e ``MPI\_Iallreduce'' permitem uma maior sobreposição de comunicação e computação, aumentando a perfomance dos programas.
+\section{Exercício V --- Jogo da Vida}
+Finalmente, o último exercício propõe a comparação da implementação do jogo da vida em Cuda e OpenMP.
+A implementação em CUDA se deu atraves da implementação de um kernel que representa cada iteração do tabuleiro do jogo da vida, foi feito o uso da memória rápida da GPU, uma vez que há uma grande interação com os dados da memória, com uma vizinhança-8.
 
-\subsection{Neighborhood Collectives}
-Esse recurso permite a utilização de operações coletivas considerando uma topologia pré-definida. Assim, operações de redução e comunicação coletivas podem ser executadas de acordo com as vizinhanças de forma mais simples e direta.
-
-\subsection{Novidades em RMA}
-
-Foram adicionadas novas rotinas para criação de janelas, como ``MPI\_Win\_allocate'' , ``MPI\_Win\_create\_dynamic'' e ``MPI\_Win\_allocate\_shared''.
-
-A função ``MPI\_Win\_allocate\_shared'' permite que uma janela de memória seja compartilhada entre diferentes processos em um mesmo nó usando apenas MPI, favorecendo a utilização do MPI em sistemas de memória compartilhada, e reduzindo a complexidade de implementação se comparado à aplicações hibridas (OpenMP + MPI).
-
-Consta também a adição de operações atômicas, como ``MPI\_Get\_accumulate'', ``MPI\_Fetch\_and\_op'', e ``MPI\_Compare\_and\_swap'', além da adição de versões adicionais de Put, Get e Accumulate que retornam objetos do tipo request, desta forma podemos usar funções Test e Wait para verificar localmente se a operação terminou.
-
-% ################################################################################
-% ################################################################################
-
-\section {Jogo da Vida}
-
-Foram implementadas duas versões do algoritmo ``Jogo da Vida'' utilizando MPI, a primeira baseada em comunicação ponto-a-ponto, e a segunda baseada na comunicação unidirecional do MPI-2. A divisão do tabuleiro foi feita verticalmente, de forma que cada processo recebe uma porção das linhas do tabuleiro para processar.
-
-Em ambos os exemplos, o resultado da execução do algoritmo em um tabuleiro pré-definido de tamanho 1250x1250, na Figura \ref{fig:ex02} uma representação das 10 últimas linhas e colunas do canto inferior direito após o final da execução do algoritmo.
-
-\textit{ Obs. A implementação do algoritmo com comunicação ponto-a-ponto poderia ter sido otimizada caso fosse feita uma troca entre os ponteiros ``aux'' e ``localdata'', mas essa otimização não era possível no segundo exemplo, então teve que ser descartada para tornar a comparação entre os dois mais justa. }
-
+Ambos os programas foram testados com as mesmas condições iniciais, e após a execução do algoritmo em um tabuleiro de tamanho $1000\times1000$, obtemos o resultado da Figura \ref{fig:ex05}.
 
 \begin{figure}[!htb]
 \begin{verbatim}
@@ -118,160 +192,62 @@ Em ambos os exemplos, o resultado da execução do algoritmo em um tabuleiro pr�
 |            |
 +------------+
 \end{verbatim}
-\caption{Condições iniciais do teste em tabuleiro 10x10.}
-\label{fig:ex02}
+\caption{Resultado do teste em tabuleiro $1000\times1000$.}
+\label{fig:ex05}
 \end{figure}
 
-\subsection{Comunicação ponto-a-ponto \label{sec:ex02a}}
-O primeiro programa utiliza comunicações ponto-a-ponto para distribuir os dados entre os processos. Nesta abordagem, o processo 0 inicializa a matriz e envia os pedaços correspondentes para cada um dos outros processos. Durante a execução do algoritmo, as ghost zones são trocadas entre os processos por operações send e receive assíncronas. Os resultados da execução do primeiro algoritmo estão na Tabela \ref{tab:ex02a}, o número crescente de processos é distribuido igualmente entre os nós.
+Foi feita então uma comparação dos tempos de execução do algoritmo paralelizado em 12 threads usando OpenMP com os tempos obtidos em CUDA na K40, disponível na Tabela\ref{tab:ex05}.
 
 \begin{table}[htb!]
-  \centering
-	\begin{adjustbox}{max width=\linewidth}
-	\begin{tabular}{llrrr}%
-		\bfseries Maquinas & \bfseries Processos & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia  \\
-    1 &	1	& 18.783	& 1	    & 1     \\
-    1 &	4	& 11.289	& 1.663 & 0.415 \\
-    2 &	2	& 15.589	& 1.204 & 0.602 \\
-    2 &	4	& 16.049	& 1.170 & 0.292 \\
-    2 &	8	& 30.498	& 0.615 &	0.076 \\
-
-	\end{tabular}
-	\end{adjustbox}
-	\caption{\label{tab:ex02a}Avaliação do desempenho do jogo da vida com comunicação ponto-a-ponto, tabuleiro de tamanho 1250x1250.}
+\centering
+\begin{tabular}{rll}
+  \bfseries Disp. & \bfseries Tempo & \bfseries Speedup \\
+  \bfseries CPU (1 thread)   & 0.012222 & 1.0 \\
+  \bfseries CPU (12 threads) & 0.009765 & 1.251613 \\
+  \bfseries GPU (CUDA)       & 0.000565 & 21.631858 \\
+\end{tabular}
+\caption{Comparação da execução em CUDA vs x CPU.\label{tab:ex05}}
 \end{table}
 
-\subsection{Comunicação unidirecional \label{sec:ex02b}}
-O segundo programa utiliza comunicações unidirecionais, de forma que o MPI se utiliza de operações RMA para obter ou inserir dados em janelas de comunicação abertas pelos outros processos.
 
-Nesta abordagem a matriz é inicializada no processo 0, que então abre uma janela de compartilhamento para que os outros processos busquem pelas linhas do tabuleiro atribuidas a eles. Durante o processamento, as ghost zones são implementadas por meio de janelas compartilhadas entre os processos.
+\begin{figure*}
+\centering
+\begin{adjustbox}{max width=\linewidth}
+\begin{BVerbatim}
+  ==7925== NVPROF is profiling process 7925, command: bin/ex01
+  Size: 99999, numBlks: 391, numThds: 256, mult: 100096
+  Inicio: qtde=100000, dt=1e-06, dx=1e-05, dx2=1e-10, kappa=4.5e-05, const=0.45
+  Iteracoes previstas: 10000
+  	HostToDevice: 0.00011664
+  	Inicializacao: 0.000440311
+  	Tempo kernels: 0.115724
+  	Tempo medio: 1.15712e-05
+  	DeviceToHost: 0.0b110544
+  	Tempo Total: 0.127257
+  Maior valor = 99.8486
+  ==7925== Profiling application: bin/ex01
+  ==7925== Profiling result:
+     Start  Duration Grid Size Block Size ...     Size  Throughput  Name
+  403.55ms  136.39us         -          - ... 781.25KB  5.4629GB/s  [CUDA memcpy HtoD]
+  403.78ms  10.752us (391 1 1)  (256 1 1) ...        -           -  Atualiza(double*, double*, int) [185]
+  403.80ms  9.8250us (391 1 1)  (256 1 1) ...        -           -  Atualiza(double*, double*, int) [190]
+  [ ... ]
+  530.30ms  9.8240us (391 1 1)  (256 1 1) ...        -           -  Atualiza(double*, double*, int) [50180]
+  530.31ms  9.7920us (391 1 1)  (256 1 1) ...        -           -  Atualiza(double*, double*, int) [50185]
+  530.32ms  16.768us (391 1 1)  (256 1 1) ...        -           -  Maximo(double*, double*, int) [50190]
+  530.34ms  4.0000us   (1 1 1)  (256 1 1) ...        -           -  Maximo(double*, double*, int) [50195]
+  530.35ms  3.1040us         -          - ...       8B  2.4579MB/s  [CUDA memcpy DtoH]
 
+  Regs: Number of registers used per CUDA thread.
+  This number includes registers used internally by the CUDA driver and/or
+  tools and can be more than what the compiler shows.
+  SSMem: Static shared memory allocated per CUDA block.
+  DSMem: Dynamic shared memory allocated per CUDA block.
+\end{BVerbatim}
+\end{adjustbox}
+\caption{Saída do NVPROF sobre o programa em CUDA da Seção\ref{sec01}.\label{fig:nvprof}}
+\end{figure*}
 
-Os resultados da execução do primeiro algoritmo estão na Tabela \ref{tab:ex02b}, o número crescente de processos é distribuido igualmente entre os nós.
-
-\begin{table}[htb!]
-  \centering
-	\begin{adjustbox}{max width=\linewidth}
-	\begin{tabular}{llrrr}%
-		\bfseries Maquinas & \bfseries Processos & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia  \\
-    1	& 1 &	18.732 & 1	   & 1     \\
-    1	& 4 &	12.840 & 1.458 & 0.364 \\
-    2	& 2 &	19.982 & 0.937 & 0.468 \\
-    2	& 4 &	19.933 & 0.939 & 0.234 \\
-    2	& 8 &	43.129 & 0.434 & 0.054 \\
-	\end{tabular}
-	\end{adjustbox}
-	\caption{\label{tab:ex02b}Avaliação do desempenho do jogo da vida com comunicação unidirecional, tabuleiro de tamanho 1250x1250.}
-\end{table}
-
-\subsection{Discussão dos resultados}
-Ao analisar as tabelas \ref{tab:ex02a} e \ref{tab:ex02b} percebemos que os algoritmos com comunicação ponto-a-ponto se demonstraram muito mais eficientes, uma vez que a utilização do MPI não demonstrou nenhuma melhora no desempenho no algoritmo com comunicação unidirecional.
-
-Além disso, como esperado, os experimentos em que os 4 processos foram atribuidos à uma só máquina obtiveram melhor resultado se comparado à divisão entre duas máquinas, pois a segunda fica limitada pela comunicação por rede ethernet.
-
-Outra informação relevante é a baixíssima eficiência obtida ao se dividir o problema em 8 processos - em ambos os casos, essa foi a configuração que obteve o maior tempo de execução e também o menor speedup e eficiência.
-
-Finalmente, a comparação entre as duas implementações se torna mais evidente na Tabela \ref{tab:ex02comp}, onde os tempos de execução da Tabela \ref{tab:ex02b} são divididos pelos valores da Tabela \ref{tab:ex02a}.
-
-
-\begin{table}[htb!]
-  \centering
-	\begin{adjustbox}{max width=\linewidth}
-	\begin{tabular}{llrrr}%
-		\bfseries Maquinas & \bfseries Processos & \bfseries Tempo Exp. A & \bfseries Tempo Exp. B & \bfseries B / A  \\
-    1	& 1 &	18.783 & 18.732 &	0.997 \\
-    1	& 4 &	11.289 & 12.840 &	1.137 \\
-    2	& 2 &	15.589 & 19.982 &	1.281 \\
-    2	& 4 &	16.049 & 19.933 &	1.241 \\
-    2	& 8 &	30.498 & 43.129 &	1.414 \\
-	\end{tabular}
-	\end{adjustbox}
-	\caption{\label{tab:ex02comp}Comparação entre o desempenho do jogo da vida com comunicação ponto-a-ponto (Exp. A) e comunicação unidirecional (Exp. B).}
-\end{table}
-
-\section{ Programação Híbrida - MPI + OpenMP\label{sec:ex03}}
-Nesse experimento, o programa descrito na seção \ref{sec:ex02a} foi adaptado para a paralelização em sistema de memória compartilhada, usando o OpenMP.
-Além do que já foi mencionado na seção \ref{sec:ex02a}, a imagem foi subdividida novamente, agora distribuindo as linhas entre as threads no laço mais externo dentro da função ``evolve''.
-Assim como no exercício anterior, o resultado da execução do algoritmo em um tabuleiro pré-definido de tamanho 1250x1250 também se iguala ao do algoritmo clássico, e as últimas 10 linhas e colunas são as mesmas da Figura \ref{fig:ex02}.
-
-
-Foram realizados 5 experimentos ao total, variando-se o número de threads, processos, distribuindo ou não o processo entre duas máquinas - os resultados estão na Tabela \ref{tab:ex03}.
-
-\begin{table}[htb!]
-  \centering
-	\begin{adjustbox}{max width=\linewidth}
-	\begin{tabular}{llllrrr}%
-		\bfseries Maquinas & \bfseries Proc. & \bfseries Thd./Proc. & \bfseries Total Thds & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia \\
-    1	& 1	& 1	& 1	& 18.712 & 1.000 & 1.000 \\
-    1	& 4	& 1	& 4	& 12.350 & 1.515 & 0.379 \\
-    2	& 8	& 1	& 8	& 30.653 & 0.610 & 0.076 \\
-    1	& 1	& 4	& 4	& 10.379 & 1.803 & 0.451 \\
-    2	& 2	& 4	& 8	& 14.392 & 1.300 & 0.163 \\
-	\end{tabular}
-	\end{adjustbox}
-	\caption{\label{tab:ex03}Avaliação do desempenho do jogo da vida com comunicação ponto-a-ponto e OpenMP, tabuleiro de tamanho 1250x1250.}
-\end{table}
-
-Avaliando os resultados, percebe-se um speedup positivo na maioria dos exemplos, porém, assim como no exercício anterior, quando 8 processos eram distribuidos entre as duas máquinas, a eficiência foi muito baixa, e o speedup foi menor do que 1.
-
-Percebe-se também, que em geral a utilização do OpenMP favoreceu grandemente o desempenho se comparado ao MPI puro com número equivalente de threads. Esse resultado era esperado, pois o número de comunicações pela rede, e entre processos é mais lento que a comunicação entre as threads em um sistema de memória compartilhada.
-
-\section{Exercício da Maratona da WSCAD}
-Para esse exercício foi selecionado o problema D, que é o calculo do histograma de uma imagem. Foi feita então a paralelização do algoritmo utilizando MPI e OpenMP.
-
-Neste programa usamos MPI, de forma que o processo 0 lê a imagem e distribui as linhas entre os processos de forma assíncrona (MPI_Isend), cada processo realiza o cálculo do histograma independentemente com o OpenMP. Por fim operação de redução do MPI soma os histogramas de cada partição da imagem.
-
-O algoritmo inicialmente realiza uma quantização dos pixels, essa operação é paralelizada com ``omp parallel for'', distribuindo os pixels entre as diferentes threads.
-Em seguida, quatro laços aninhados são utilizados para contar ocorrências das 64 possíveis combinações de cores agora disponíveis, e embora o laço mais externo possua apenas quatro iterações, optei por paralelizá-lo, pois seriam utilizadas 4 threads no máximo.
-Outra opção seria paralelizar o laço interno, utilizando operações de redução para acumular o valor do contador de ocorrências.
-
-A imagem utilizada nos testes é a da Figura \ref{fig:ex04_1}, com  8960x8897 pixels - originalmente com 21MB no formato jpg, e após a conversão para PPM pelo Imagemagick passou a ter 229 MB.
-
-
-\begin{figure}[!htb]
-  \centering
-\includegraphics[width=0.4\textwidth] {small-image.jpg}
-\caption{M31 - Galáxia de andrômeda (Créditos: Hiromitsu Kohsaka/HSC Project/NAOJ) - Obtido em \url{http://subarutelescope.org/Topics/2014/09/08/index.html} .}
-\label{fig:ex04_1}
-\end{figure}
-
- O resultado da execução do algoritmo foi conferido em todos os testes, e o histograma obtido é o mesmo da Figura \ref{fig:ex04_2}.
-
-\begin{figure}[!htb]
-  \begin{adjustbox}{max width=\linewidth}
-	\begin{BVerbatim}
-0.832 0.032 0.000 0.000 0.000 0.009 0.001 0.000 0.000 0.000 0.000 0.000
-0.000 0.000 0.000 0.000 0.002 0.009 0.000 0.000 0.000 0.061 0.005 0.000
-0.000 0.000 0.001 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
-0.000 0.005 0.004 0.000 0.000 0.001 0.023 0.003 0.000 0.000 0.000 0.001
-0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
-0.000 0.000 0.000 0.009
-  \end{BVerbatim}
-  \end{adjustbox}
-\caption{Histograma da Figura \ref{fig:ex04_1}.}
-\label{fig:ex04_2}
-\end{figure}
-
-
-Assim como na seção \ref{sec:ex03}, foram realizados 5 experimentos ao total, variando-se o número de threads, processos, distribuindo ou não o processo entre duas máquinas. Os resultados da execução do programa sobre a Figura \ref{fig:ex04_1} estão na Tabela \ref{tab:ex04}.
-
-
-\begin{table}[htb!]
-  \centering
-	\begin{adjustbox}{max width=\linewidth}
-	\begin{tabular}{llllrrr}%
-		\bfseries Maquinas & \bfseries Proc. & \bfseries Thd./Proc. & \bfseries Total Thds & \bfseries Tempo(s) & \bfseries Speedup & \bfseries Eficiencia \\
-    1	& 1	& 1	& 1	& 4.234	 & 1.000 & 1.000 \\
-    1	& 4	& 1	& 4	& 2.601	 & 1.628 & 0.407 \\
-    2	& 8	& 1	& 8	& 12.818 & 0.330 & 0.041 \\
-    1	& 1	& 4	& 4	& 4.228	 & 1.001 & 0.250 \\
-    2	& 2	& 4	& 8	& 15.339 & 0.276 & 0.035 \\
-	\end{tabular}
-	\end{adjustbox}
-	\caption{\label{tab:ex04}Avaliação do desempenho do cálculo do histograma, com comunicação ponto-a-ponto e OpenMP, para uma imagem colorida de 8960x8897 pixels.}
-\end{table}
-
-Ao analisar os resultados da Tabela \ref{tab:ex04}, percebemos que a utilização do OpenMP sozinha foi muito mais eficiente que as alternativas com MPI, inclusive MPI híbrido. Isso se deve ao grande volume de dados que precisa ser enviado pela rede, e possivelmente pelas próprias limitações da rede, o tráfego na rede identificado pelo ``gnome-system-monitor'' chegou ao pico de 100Mbps, e assim o tempo de execução poderia ser reduzido consideravelmente em uma rede gigabit.
 
 \bibliographystyle{IEEEtran}
 

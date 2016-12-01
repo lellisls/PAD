@@ -62,7 +62,7 @@ int main( void ) {
   cudaMalloc( ( void** ) &u_prev_d, ( n + 1 ) * sizeof( double ) );
   cudaMalloc( ( void** ) &max_d, (gridSize + 1 )* sizeof( float )  * sizeof( double ) );
 
-  printf( "Inicio: qtde=%ld, dt=%g, dx=%g, dx²=%g, kappa=%f, const=%f\n",
+  printf( "Inicio: qtde=%ld, dt=%g, dx=%g, dx²=%g, kappa=%g, const=%g\n",
           ( n + 1 ), dt, dx, dx * dx, kappa, kappa * dt / ( dx * dx ) );
   printf( "Iteracoes previstas: %g\n", T / dt );
 
@@ -82,8 +82,8 @@ int main( void ) {
 
   cudaMemcpy( u_prev_d, u_prev, sizeof( double ) * (n + 1), cudaMemcpyHostToDevice );
 
-  printf( "\tHostToDevice : %f\n", omp_get_wtime( ) - start_copy1 );
-  printf( "\tInicializacao: %f\n", omp_get_wtime( ) - start );
+  printf( "\tHostToDevice : %g\n", omp_get_wtime( ) - start_copy1 );
+  printf( "\tInicializacao: %g\n", omp_get_wtime( ) - start );
 
   /* cudaMemcpy( u_prev, u_prev_d, ( n + 1 ) * sizeof( double ), cudaMemcpyDeviceToHost ); */
 
@@ -95,7 +95,7 @@ int main( void ) {
    */
   /*
    * x = ( n + 1 ) * dx;
-   * printf( "%f\n", x );
+   * printf( "%g\n", x );
    * printf( "dx=%g, x=%g, x-dx=%g\n", dx, x, x - dx );
    * printf( "u_prev[0,1]=%g, %g\n", u_prev[ 0 ], u_prev[ 1 ] );
    * printf( "u_prev[n-1,n]=%g, %g\n", u_prev[ n - 1 ], u_prev[ n ] );
@@ -112,8 +112,8 @@ int main( void ) {
     ++steps;
   }
   double totalKernel = omp_get_wtime( ) - start_kernel;
-  printf( "\tTempo kernels: %f \n", totalKernel );
-  printf( "\tTempo medio  : %f \n", totalKernel / steps );
+  printf( "\tTempo kernels: %g \n", totalKernel );
+  printf( "\tTempo medio  : %g \n", totalKernel / steps );
 
   int smem_sz = blockSize * sizeof( double );
   Maximo << < gridSize, blockSize, smem_sz >> > ( u_d, max_d, n );
@@ -122,8 +122,8 @@ int main( void ) {
   double maxval;
   double start_copy2 = omp_get_wtime( );
   cudaMemcpy( &maxval, max_d + gridSize, sizeof( double ), cudaMemcpyDeviceToHost );
-  printf( "\tTempo transf : %f \n", omp_get_wtime( ) - start_copy2 );
-  printf( "\tTempo Total  : %f \n", omp_get_wtime( ) - start );
+  printf( "\tDeviceToHost : %g \n", omp_get_wtime( ) - start_copy2 );
+  printf( "\tTempo Total  : %g \n", omp_get_wtime( ) - start );
 
   printf( "Maior valor = %g\n", maxval );
 

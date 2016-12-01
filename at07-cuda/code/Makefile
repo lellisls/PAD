@@ -3,9 +3,9 @@ CCOPTS= -std=c++11 -arch=compute_30 -code=sm_30 -I /usr/include/cuda/ -Xcompiler
 all: ftcs som_mat ex01 ex02 ex03 ex04
 
 ex01: clean
-	nvcc $(CCOPTS) -Iinc src/${@}.cu -o bin/$@ $(CFLAGS)
-	bin/$@
 	gcc -fopenmp -Iinc src/${@}.c -o bin/$@ $(CFLAGS)
+	bin/$@
+	nvcc $(CCOPTS) -Iinc src/${@}.cu -o bin/$@ $(CFLAGS)
 	bin/$@
 
 ex01-b: clean
@@ -20,6 +20,8 @@ ex03: clean
 
 ex04: clean
 	nvcc $(CCOPTS) -Iinc src/${@}.cu -o bin/$@ $(CFLAGS)
+	bin/$@
+	gcc -fopenmp -Iinc src/${@}.c -o bin/$@ $(CFLAGS)
 	bin/$@
 
 ex05: clean
